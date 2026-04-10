@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>キャスト勤怠管理</title>
+<title>ã‚­ãƒ£ã‚¹ãƒˆå‹¤æ€ ç®¡ç†</title>
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
@@ -264,14 +264,14 @@ textarea { resize: vertical; min-height: 60px; }
 <!-- LOADING -->
 <div class="loading-overlay" id="loading">
   <div class="spinner"></div>
-  <div style="font-size:14px;color:var(--text-light)">データを読み込み中...</div>
+  <div style="font-size:14px;color:var(--text-light)">ãƒ‡ãƒ¼ã‚¿ã‚’èª­ã¿è¾¼ã¿ä¸­...</div>
 </div>
 
-<!-- ===== SETUP SCREEN (Firebase未設定時) ===== -->
+<!-- ===== SETUP SCREEN (Firebaseæœªè¨­å®šæ™‚) ===== -->
 <div id="setup-screen" class="setup-screen" style="display:none">
   <div class="card">
-    <h2>初期セットアッブ</h2>
-    <p class="sub">Firebaseの設定情報を貼り付けてください</p>
+    <h2>åˆæœŸã‚»ãƒƒãƒˆã‚¢ãƒƒãƒ–</h2>
+    <p class="sub">Firebaseã®è¨­å®šæƒ…å ±ã‚’è²¼ã‚Šä»˜ã‘ã¦ãã ã•ã„</p>
     <textarea id="firebase-config-input" placeholder='{
   "apiKey": "AIza...",
   "authDomain": "your-project.firebaseapp.com",
@@ -281,9 +281,9 @@ textarea { resize: vertical; min-height: 60px; }
   "messagingSenderId": "123456789",
   "appId": "1:123:web:abc..."
 }'></textarea>
-    <button class="btn btn-primary" onclick="saveFirebaseConfig()">設定を保存して開始</button>
+    <button class="btn btn-primary" onclick="saveFirebaseConfig()">è¨­å®šã‚’ä¿å­˜ã—ã¦é–‹å§‹</button>
     <p style="font-size:11px;color:var(--text-light);margin-top:12px;text-align:center">
-      ※ セットアップガイドの手順に沿って設定してください
+      â€» ã‚»ãƒƒãƒˆã‚¢ãƒƒãƒ—ã‚¬ã‚¤ãƒ‰ã®æ‰‹é †ã«æ²¿ã£ã¦è¨­å®šã—ã¦ãã ã•ã„
     </p>
   </div>
 </div>
@@ -292,157 +292,157 @@ textarea { resize: vertical; min-height: 60px; }
 <div id="main-app" style="display:none">
 
 <div class="nav">
-  <h1>キャスト勤怠管理</h1>
-  <p>遅刻・欠勤・勤務変更の記録と管理</p>
+  <h1>ã‚­ãƒ£ã‚¹ãƒˆå‹¤æ€ ç®¡ç†</h1>
+  <p>é…åˆ»ãƒ»æ¬ å‹¤ãƒ»å‹¤å‹™å¤‰æ›´ã®è¨˜éŒ²ã¨ç®¡ç†</p>
   <span class="status" id="conn-status"></span>
 </div>
 
 <div class="tabs">
-  <button class="tab active" onclick="switchTab('report')">申請</button>
-  <button class="tab" onclick="switchTab('dashboard')">ダッシュボード</button>
-  <button class="tab" onclick="switchTab('history')">履歴<span class="lock-icon">🔒</span></button>
-  <button class="tab" onclick="switchTab('cast')">キャスト<span class="lock-icon">🔒</span></button>
-  <button class="tab" onclick="switchTab('settings')">設定<span class="lock-icon">🔒</span></button>
+  <button class="tab active" onclick="switchTab('report')">ç”³è«‹</button>
+  <button class="tab" onclick="switchTab('dashboard')">ãƒ€ãƒƒã‚·ãƒ¥ãƒœãƒ¼ãƒ‰</button>
+  <button class="tab" onclick="switchTab('history')">å±¥æ­´<span class="lock-icon">ðŸ”’</span></button>
+  <button class="tab" onclick="switchTab('cast')">ã‚­ãƒ£ã‚¹ãƒˆ<span class="lock-icon">ðŸ”’</span></button>
+  <button class="tab" onclick="switchTab('settings')">è¨­å®š<span class="lock-icon">ðŸ”’</span></button>
 </div>
 
-<!-- 申請ページ -->
+<!-- ç”³è«‹ãƒšãƒ¼ã‚¸ -->
 <div id="page-report" class="page active">
   <div class="card">
-    <h3>新規申請</h3>
+    <h3>æ–°è¦ç”³è«‹</h3>
     <div class="form-group">
-      <label>種類</label>
+      <label>ç¨®é¡ž</label>
       <div class="type-selector">
         <button class="type-btn active" data-type="late" onclick="selectType(this)">
-          <span class="icon">⏰</span>遅刻
+          <span class="icon">â°</span>é…åˆ»
         </button>
         <button class="type-btn" data-type="absent" onclick="selectType(this)">
-          <span class="icon">✖️</span>欠勤
+          <span class="icon">âœ–ï¸</span>æ¬ å‹¤
         </button>
         <button class="type-btn" data-type="change" onclick="selectType(this)">
-          <span class="icon">🔄</span>勤務変更
+          <span class="icon">ðŸ”„</span>å‹¤å‹™å¤‰æ›´
         </button>
       </div>
     </div>
     <div class="form-group">
-      <label>キャスト名</label>
+      <label>ã‚­ãƒ£ã‚¹ãƒˆå</label>
       <select id="cast-select">
-        <option value="">選択してください</option>
+        <option value="">é¸æŠžã—ã¦ãã ã•ã„</option>
       </select>
     </div>
     <div class="form-group" id="date-group">
-      <label>日付</label>
+      <label>æ—¥ä»˜</label>
       <input type="date" id="report-date">
     </div>
     <div class="form-group" id="time-group">
-      <label id="time-label">遅刻時間（分）</label>
-      <input type="number" id="report-minutes" placeholder="例: 30" min="0">
+      <label id="time-label">é…åˆ»æ™‚é–“ï¼ˆåˆ†ï¼‰</label>
+      <input type="number" id="report-minutes" placeholder="ä¾‹: 30" min="0">
     </div>
     <div class="form-group">
-      <label>理由</label>
+      <label>ç†ç”±</label>
       <select id="reason-select">
-        <option value="">選択してください</option>
-        <option value="体調不良">体調不良</option>
-        <option value="交通樟関の遅延">交通機関の遅延</option>
-        <option value="家庭の事情">家庭の事情</option>
-        <option value="シフト調整">シフト調整</option>
-        <option value="急用">急用</option>
+        <option value="">é¸æŠžã—ã¦ãã ã•ã„</option>
+        <option value="ä½“èª¿ä¸è‰¯">ä½“èª¿ä¸è‰¯</option>
+        <option value="äº¤é€šæ¨Ÿé–¢ã®é…å»¶">äº¤é€šæ©Ÿé–¢ã®é…å»¶</option>
+        <option value="å®¶åº­ã®äº‹æƒ…">å®¶åº­ã®äº‹æƒ…</option>
+        <option value="ã‚·ãƒ•ãƒˆèª¿æ•´">ã‚·ãƒ•ãƒˆèª¿æ•´</option>
+        <option value="æ€¥ç”¨">æ€¥ç”¨</option>
       </select>
     </div>
     <div class="form-group">
-      <label>備考（任意）</label>
-      <textarea id="report-note" placeholder="詳細があれば記入"></textarea>
+      <label>å‚™è€ƒï¼ˆä»»æ„ï¼‰</label>
+      <textarea id="report-note" placeholder="è©³ç´°ãŒã‚ã‚Œã°è¨˜å…¥"></textarea>
     </div>
-    <button class="btn btn-primary" id="submit-btn" onclick="submitReport()">申請を記録する</button>
+    <button class="btn btn-primary" id="submit-btn" onclick="submitReport()">ç”³è«‹ã‚’è¨˜éŒ²ã™ã‚‹</button>
   </div>
 </div>
 
-<!-- ダッシュボードページ -->
+<!-- ãƒ€ãƒƒã‚·ãƒ¥ãƒœãƒ¼ãƒ‰ãƒšãƒ¼ã‚¸ -->
 <div id="page-dashboard" class="page">
   <div class="month-nav">
-    <button onclick="changeMonth(-1)">◀</button>
+    <button onclick="changeMonth(-1)">â—€</button>
     <span id="month-label"></span>
-    <button onclick="changeMonth(1)">▶</button>
+    <button onclick="changeMonth(1)">â–¶</button>
   </div>
   <div id="alert-area"></div>
   <div class="summary-grid" id="summary-grid"></div>
   <div class="card">
-    <h3>キャスト別ランキング（申請回数が多い順）</h3>
+    <h3>ã‚­ãƒ£ã‚¹ãƒˆåˆ¥ãƒ©ãƒ³ã‚­ãƒ³ã‚°ï¼ˆç”³è«‹å›žæ•°ãŒå¤šã„é †ï¼‰</h3>
     <div id="ranking-list"></div>
   </div>
 </div>
 
-<!-- 履歴ページ -->
+<!-- å±¥æ­´ãƒšãƒ¼ã‚¸ -->
 <div id="page-history" class="page">
   <div class="filter-row">
-    <select id="filter-cast" onchange="renderHistory()"><option value="">全キャスト</option></select>
+    <select id="filter-cast" onchange="renderHistory()"><option value="">å…¨ã‚­ãƒ£ã‚¹ãƒˆ</option></select>
     <select id="filter-type" onchange="renderHistory()">
-      <option value="">全種類</option>
-      <option value="late">遅刻</option>
-      <option value="absent">欠勤</option>
-      <option value="change">勤務変更</option>
+      <option value="">å…¨ç¨®é¡ž</option>
+      <option value="late">é…åˆ»</option>
+      <option value="absent">æ¬ å‹¤</option>
+      <option value="change">å‹¤å‹™å¤‰æ›´</option>
     </select>
   </div>
   <div class="filter-row">
     <input type="month" id="filter-month" onchange="renderHistory()">
   </div>
   <div class="card" id="history-card"><div id="history-list"></div></div>
-  <button class="btn btn-secondary" onclick="exportCSV()" style="margin-top:8px">CSVエクスポート</button>
+  <button class="btn btn-secondary" onclick="exportCSV()" style="margin-top:8px">CSVã‚¨ã‚¯ã‚¹ãƒãƒ¼ãƒˆ</button>
 </div>
 
-<!-- キャスト管理ページ -->
+<!-- ã‚­ãƒ£ã‚¹ãƒˆç®¡ç†ãƒšãƒ¼ã‚¸ -->
 <div id="page-cast" class="page">
   <div class="card">
-    <h3>キャスト登��</h3>
+    <h3>ã‚­ãƒ£ã‚¹ãƒˆç™»éŒÊ</h3>
     <div class="add-row" style="margin-bottom:12px">
-      <input type="text" id="new-cast-name" placeholder="キャスト名を入力">
-      <button class="btn btn-primary btn-small" onclick="addCast()">追加</button>
+      <input type="text" id="new-cast-name" placeholder="ã‚­ãƒ£ã‚¹ãƒˆåã‚’å…¥åŠ›">
+      <button class="btn btn-primary btn-small" onclick="addCast()">è¿½åŠ </button>
     </div>
     <div id="cast-list"></div>
   </div>
   <div class="card">
-    <h3>一括インポート</h3>
-    <p style="font-size:12px;color:var(--text-light);margin-bottom:10px">キャスト名を1行に1人ずつ入力（コピペOK）</p>
-    <textarea id="bulk-cast-input" placeholder="例：&#10;あいり&#10;みく&#10;さくら" style="min-height:100px;width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;resize:vertical;margin-bottom:10px"></textarea>
+    <h3>ä¸€æ‹¬ã‚¤ãƒ³ãƒãƒ¼ãƒˆ</h3>
+    <p style="font-size:12px;color:var(--text-light);margin-bottom:10px">ã‚­ãƒ£ã‚¹ãƒˆåã‚’1è¡Œã«1äººãšã¤å…¥åŠ›ï¼ˆã‚³ãƒ”ãƒšOKï¼‰</p>
+    <textarea id="bulk-cast-input" placeholder="ä¾‹ï¼š&#10;ã‚ã„ã‚Š&#10;ã¿ã&#10;ã•ãã‚‰" style="min-height:100px;width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;resize:vertical;margin-bottom:10px"></textarea>
     <div style="display:flex;gap:8px">
-      <button class="btn btn-primary btn-small" onclick="bulkImportCasts()" style="flex:1">一括登��</button>
-      <button class="btn btn-secondary btn-small" onclick="document.getElementById('bulk-cast-input').value=''" style="flex:0">クリア</button>
+      <button class="btn btn-primary btn-small" onclick="bulkImportCasts()" style="flex:1">ä¸€æ‹¬ç™»éŒÊ</button>
+      <button class="btn btn-secondary btn-small" onclick="document.getElementById('bulk-cast-input').value=''" style="flex:0">ã‚¯ãƒªã‚¢</button>
     </div>
     <div id="bulk-result" style="margin-top:8px;font-size:13px;display:none"></div>
   </div>
   <div class="card">
-    <h3>キャスト別 集計</h3>
-    <select id="cast-detail-select" onchange="renderCastDetail()"><option value="">キャストを選択</option></select>
+    <h3>ã‚­ãƒ£ã‚¹ãƒˆåˆ¥ é›†è¨ˆ</h3>
+    <select id="cast-detail-select" onchange="renderCastDetail()"><option value="">ã‚­ãƒ£ã‚¹ãƒˆã‚’é¸æŠž</option></select>
     <div id="cast-detail" style="margin-top:12px"></div>
   </div>
 </div>
 
-<!-- 設定ページ -->
+<!-- è¨­å®šãƒšãƒ¼ã‚¸ -->
 <div id="page-settings" class="page">
   <div class="card">
-    <h3>アラート設定</h3>
-    <p style="font-size:12px;color:var(--text-light);margin-bottom:12px">月間の回数がこの値以上になるとダッシュボードに警告が出ます</p>
-    <div class="threshold-row"><label>⏰ 遅刻</label><input type="number" id="th-late" min="1" value="3" onchange="saveSettings()"> 回</div>
-    <div class="threshold-row"><label>✖️ 欠勤</label><input type="number" id="th-absent" min="1" value="2" onchange="saveSettings()"> 回</div>
-    <div class="threshold-row"><label>🔄 勤務変更</label><input type="number" id="th-change" min="1" value="5" onchange="saveSettings()"> 回</div>
+    <h3>ã‚¢ãƒ©ãƒ¼ãƒˆè¨­å®š</h3>
+    <p style="font-size:12px;color:var(--text-light);margin-bottom:12px">æœˆé–“ã®å›žæ•°ãŒã“ã®å€¤ä»¥ä¸Šã«ãªã‚‹ã¨ãƒ€ãƒƒã‚·ãƒ¥ãƒœãƒ¼ãƒ‰ã«è­¦å‘ŠãŒå‡ºã¾ã™</p>
+    <div class="threshold-row"><label>â° é…åˆ»</label><input type="number" id="th-late" min="1" value="3" onchange="saveSettings()"> å›ž</div>
+    <div class="threshold-row"><label>âœ–ï¸ æ¬ å‹¤</label><input type="number" id="th-absent" min="1" value="2" onchange="saveSettings()"> å›ž</div>
+    <div class="threshold-row"><label>ðŸ”„ å‹¤å‹™å¤‰æ›´</label><input type="number" id="th-change" min="1" value="5" onchange="saveSettings()"> å›ž</div>
   </div>
   <div class="card">
-    <h3>管理者パスワード変更</h3>
-    <div class="form-group"><label>現在のパスワード</label><input type="password" id="pw-current" placeholder="現在のパスワード"></div>
-    <div class="form-group"><label>新しいパスワード（4〜20文字）</label><input type="password" id="pw-new" placeholder="新しいパスワード"></div>
-    <div class="form-group"><label>新しいパスワード（確認）</label><input type="password" id="pw-confirm" placeholder="もう一度入力"></div>
-    <button class="btn btn-primary" onclick="changePassword()">パスワードを変更</button>
+    <h3>ç®¡ç†è€…ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰å¤‰æ›´</h3>
+    <div class="form-group"><label>ç¾åœ¨ã®ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰</label><input type="password" id="pw-current" placeholder="ç¾åœ¨ã®ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰"></div>
+    <div class="form-group"><label>æ–°ã—ã„ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰ï¼ˆ4ã€œ20æ–‡å­—ï¼‰</label><input type="password" id="pw-new" placeholder="æ–°ã—ã„ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰"></div>
+    <div class="form-group"><label>æ–°ã—ã„ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰ï¼ˆç¢ºèªï¼‰</label><input type="password" id="pw-confirm" placeholder="ã‚‚ã†ä¸€åº¦å…¥åŠ›"></div>
+    <button class="btn btn-primary" onclick="changePassword()">ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰ã‚’å¤‰æ›´</button>
   </div>
   <div class="card">
-    <h3>データ管理</h3>
-    <button class="btn btn-secondary" onclick="exportJSON()" style="margin-bottom:8px">データをバックアップ（JSON）</button>
-    <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()" style="margin-bottom:8px">データを復元（JSON）</button>
+    <h3>ãƒ‡ãƒ¼ã‚¿ç®¡ç†</h3>
+    <button class="btn btn-secondary" onclick="exportJSON()" style="margin-bottom:8px">ãƒ‡ãƒ¼ã‚¿ã‚’ãƒãƒƒã‚¯ã‚¢ãƒƒãƒ—ï¼ˆJSONï¼‰</button>
+    <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()" style="margin-bottom:8px">ãƒ‡ãƒ¼ã‚¿ã‚’å¾©å…ƒï¼ˆJSONï¼‰</button>
     <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(event)">
-    <button class="btn btn-danger" onclick="clearAllData()">全データ削除</button>
+    <button class="btn btn-danger" onclick="clearAllData()">å…¨ãƒ‡ãƒ¼ã‚¿å‰Šé™¤</button>
   </div>
   <div class="card">
-    <h3>Firebase設定リセット</h3>
-    <p style="font-size:12px;color:var(--text-light);margin-bottom:12px">Firebase接続情報をリセットして再設定します</p>
-    <button class="btn btn-secondary" onclick="resetFirebaseConfig()">Firebase設定をリセット</button>
+    <h3>Firebaseè¨­å®šãƒªã‚»ãƒƒãƒˆ</h3>
+    <p style="font-size:12px;color:var(--text-light);margin-bottom:12px">FirebaseæŽ¥ç¶šæƒ…å ±ã‚’ãƒªã‚»ãƒƒãƒˆã—ã¦å†è¨­å®šã—ã¾ã™</p>
+    <button class="btn btn-secondary" onclick="resetFirebaseConfig()">Firebaseè¨­å®šã‚’ãƒªã‚»ãƒƒãƒˆ</button>
   </div>
 </div>
 
@@ -451,17 +451,17 @@ textarea { resize: vertical; min-height: 60px; }
 <!-- PASSWORD MODAL -->
 <div class="pw-overlay" id="pw-overlay">
   <div class="pw-box">
-    <h3>管理者パスワード</h3>
-    <p>管理ページにアクセスするにはパスワードを入力してください</p>
-    <input type="password" id="pw-input" placeholder="パスワード" maxlength="20" onkeydown="if(event.key==='Enter')checkPassword()">
-    <div class="pw-error" id="pw-error">パスワードが違います</div>
-    <button class="btn btn-primary" onclick="checkPassword()">解錠</button>
-    <button class="btn btn-secondary" onclick="closePwModal()" style="margin-top:8px">キャンセル</button>
+    <h3>ç®¡ç†è€…ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰</h3>
+    <p>ç®¡ç†ãƒšãƒ¼ã‚¸ã«ã‚¢ã‚¯ã‚»ã‚¹ã™ã‚‹ã«ã¯ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰ã‚’å…¥åŠ›ã—ã¦ãã ã•ã„</p>
+    <input type="password" id="pw-input" placeholder="ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰" maxlength="20" onkeydown="if(event.key==='Enter')checkPassword()">
+    <div class="pw-error" id="pw-error">ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰ãŒé•ã„ã¾ã™</div>
+    <button class="btn btn-primary" onclick="checkPassword()">è§£éŒ </button>
+    <button class="btn btn-secondary" onclick="closePwModal()" style="margin-top:8px">ã‚­ãƒ£ãƒ³ã‚»ãƒ«</button>
   </div>
 </div>
 
 <!-- LOCK BUTTON -->
-<button class="lock-btn" id="lock-btn" onclick="lockAdmin()" title="管理画面をロック">🔒</button>
+<button class="lock-btn" id="lock-btn" onclick="lockAdmin()" title="ç®¡ç†ç”»é¢ã‚’ãƒ­ãƒƒã‚¯">ðŸ”’</button>
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
@@ -470,11 +470,11 @@ textarea { resize: vertical; min-height: 60px; }
 <div class="modal-overlay" id="confirm-modal">
   <div class="modal">
     <button class="modal-close" onclick="closeModal()">&times;</button>
-    <h3 id="confirm-title">確認</h3>
+    <h3 id="confirm-title">ç¢ºèª</h3>
     <p id="confirm-msg" style="margin-bottom:16px;font-size:14px"></p>
     <div style="display:flex;gap:8px">
-      <button class="btn btn-secondary" onclick="closeModal()" style="flex:1">キャンセル</button>
-      <button class="btn btn-danger" id="confirm-btn" onclick="" style="flex:1">削除</button>
+      <button class="btn btn-secondary" onclick="closeModal()" style="flex:1">ã‚­ãƒ£ãƒ³ã‚»ãƒ«</button>
+      <button class="btn btn-danger" id="confirm-btn" onclick="" style="flex:1">å‰Šé™¤</button>
     </div>
   </div>
 </div>
@@ -486,12 +486,12 @@ textarea { resize: vertical; min-height: 60px; }
 const ADMIN_TABS = ['history', 'cast', 'settings'];
 const NO_DATE_TYPES = ['late'];
 const DEFAULT_PASSWORD = '0000';
-const DEFAULT_CASTS = ['あむ','める','らん','はお','ゆゆ','りり','ぷり','るる','なこ','るい','ゆめ','あっと','うさび','せいら','ひめ','ねむち','しゃる','まりか'];
+const DEFAULT_CASTS = ['ã‚ã‚€','ã‚ã‚‹','ã‚‰ã‚“','ã¯ãŠ','ã‚†ã‚†','ã‚Šã‚Š','ã·ã‚Š','ã‚‹ã‚‹','ãªã“','ã‚‹ã„','ã‚†ã‚','ã‚ã£ã¨','ã†ã•ã³','ã›ã„ã‚‰','ã²ã‚','ã­ã‚€ã¡','ã—ã‚ƒã‚‹','ã¾ã‚Šã‹'];
 
 const TYPE_MAP = {
-  late:   { label: '遅刻',   badge: 'badge-late',   icon: '⏰' },
-  absent: { label: '欠勤',   badge: 'badge-absent',  icon: '✖️' },
-  change: { label: '勤務変更', badge: 'badge-change', icon: '🔄' },
+  late:   { label: 'é…åˆ»',   badge: 'badge-late',   icon: 'â°' },
+  absent: { label: 'æ¬ å‹¤',   badge: 'badge-absent',  icon: 'âœ–ï¸' },
+  change: { label: 'å‹¤å‹™å¤‰æ›´', badge: 'badge-change', icon: 'ðŸ”„' },
 };
 
 let db = null;
@@ -508,9 +508,18 @@ let dataLoaded = { records: false, casts: false, settings: false, password: fals
 // ============================================================
 //  FIREBASE INIT
 // ============================================================
+const HARDCODED_CONFIG = {
+  apiKey: "AIzaSyDzd7wHfrepzFGxN6WvpW1gnVZhlsxEPe0",
+  authDomain: "cast-attendance-a2b6f.firebaseapp.com",
+  databaseURL: "https://cast-attendance-a2b6f-default-rtdb.firebaseio.com",
+  projectId: "cast-attendance-a2b6f",
+  storageBucket: "cast-attendance-a2b6f.firebasestorage.app",
+  messagingSenderId: "1042839353724",
+  appId: "1:1042839353724:web:b02099866294e56611ccf9"
+};
+
 function getStoredConfig() {
-  try { return JSON.parse(localStorage.getItem('firebase_config')); }
-  catch { return null; }
+  return HARDCODED_CONFIG;
 }
 
 function saveFirebaseConfig() {
@@ -521,12 +530,12 @@ function saveFirebaseConfig() {
     localStorage.setItem('firebase_config', JSON.stringify(config));
     location.reload();
   } catch (e) {
-    showToast('JSON形式が正しくありません: ' + e.message);
+    showToast('JSONå½¢å¼ãŒæ­£ã—ãã‚ã‚Šã¾ã›ã‚“: ' + e.message);
   }
 }
 
 function resetFirebaseConfig() {
-  if (confirm('Firebase設定をリセットしますか？')) {
+  if (confirm('Firebaseè¨­å®šã‚’ãƒªã‚»ãƒƒãƒˆã—ã¾ã™ã‹ï¼Ÿ')) {
     localStorage.removeItem('firebase_config');
     location.reload();
   }
@@ -541,10 +550,10 @@ function initFirebase(config) {
     db.ref('.info/connected').on('value', (snap) => {
       const el = document.getElementById('conn-status');
       if (snap.val() === true) {
-        el.textContent = 'オンライン';
+        el.textContent = 'ã‚ªãƒ³ãƒ©ã‚¤ãƒ³';
         el.className = 'status online';
       } else {
-        el.textContent = 'オフライン';
+        el.textContent = 'ã‚ªãƒ•ãƒ©ã‚¤ãƒ³';
         el.className = 'status offline';
       }
     });
@@ -683,7 +692,7 @@ function initApp() {
   const ok = initFirebase(config);
   if (!ok) {
     document.getElementById('loading').classList.add('hide');
-    showToast('Firebase接続に失敗しました。設定を確認してください。');
+    showToast('FirebaseæŽ¥ç¶šã«å¤±æ•—ã—ã¾ã—ãŸã€‚è¨­å®šã‚’ç¢ºèªã—ã¦ãã ã•ã„ã€‚');
     return;
   }
   initApp();
@@ -715,7 +724,7 @@ function checkPassword() {
     closePwModal();
     updateLockUI();
     if (pendingTab) doSwitchTab(pendingTab);
-    showToast('管理画面を解錠しました');
+    showToast('ç®¡ç†ç”»é¢ã‚’è§£éŒ ã—ã¾ã—ãŸ');
   } else {
     document.getElementById('pw-error').style.display = 'block';
     document.getElementById('pw-input').value = '';
@@ -730,7 +739,7 @@ function lockAdmin() {
     const id = activePage.id.replace('page-', '');
     if (ADMIN_TABS.includes(id)) doSwitchTab('report');
   }
-  showToast('ロックしました');
+  showToast('ãƒ­ãƒƒã‚¯ã—ã¾ã—ãŸ');
 }
 function updateLockUI() {
   document.querySelectorAll('.lock-icon').forEach(el => { el.style.display = adminUnlocked ? 'none' : ''; });
@@ -740,14 +749,14 @@ function changePassword() {
   const current = document.getElementById('pw-current').value;
   const newPw = document.getElementById('pw-new').value;
   const confirm = document.getElementById('pw-confirm').value;
-  if (current !== adminPassword) { showToast('現在のパスワードが違います'); return; }
-  if (newPw.length < 4) { showToast('パスワードは4文字以上にしてください'); return; }
-  if (newPw !== confirm) { showToast('新しいパスワードが一致しません'); return; }
+  if (current !== adminPassword) { showToast('ç¾åœ¨ã®ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰ãŒé•ã„ã¾ã™'); return; }
+  if (newPw.length < 4) { showToast('ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰ã¯4æ–‡å­—ä»¥ä¸Šã«ã—ã¦ãã ã•ã„'); return; }
+  if (newPw !== confirm) { showToast('æ–°ã—ã„ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰ãŒä¸€è‡´ã—ã¾ã›ã‚“'); return; }
   fbSavePassword(newPw);
   document.getElementById('pw-current').value = '';
   document.getElementById('pw-new').value = '';
   document.getElementById('pw-confirm').value = '';
-  showToast('パスワードを変更しました');
+  showToast('ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰ã‚’å¤‰æ›´ã—ã¾ã—ãŸ');
 }
 
 // ============================================================
@@ -781,8 +790,8 @@ function updateTimeLabel() {
   const tl = document.getElementById('time-label');
   const dg = document.getElementById('date-group');
   dg.style.display = NO_DATE_TYPES.includes(selectedType) ? 'none' : '';
-  if (selectedType === 'late') { tg.style.display = ''; tl.textContent = '遅刻時間（分）'; }
-  else if (selectedType === 'change') { tg.style.display = ''; tl.textContent = '変更時間（分・任意）'; }
+  if (selectedType === 'late') { tg.style.display = ''; tl.textContent = 'é…åˆ»æ™‚é–“ï¼ˆåˆ†ï¼‰'; }
+  else if (selectedType === 'change') { tg.style.display = ''; tl.textContent = 'å¤‰æ›´æ™‚é–“ï¼ˆåˆ†ãƒ»ä»»æ„ï¼‰'; }
   else { tg.style.display = 'none'; }
 }
 
@@ -798,12 +807,12 @@ function submitReport() {
   const reason = document.getElementById('reason-select').value;
   const note = document.getElementById('report-note').value.trim();
 
-  if (!castName) { showToast('キャストを選択してください'); return; }
-  if (!date) { showToast('日付を入力してください'); return; }
+  if (!castName) { showToast('ã‚­ãƒ£ã‚¹ãƒˆã‚’é¸æŠžã—ã¦ãã ã•ã„'); return; }
+  if (!date) { showToast('æ—¥ä»˜ã‚’å…¥åŠ›ã—ã¦ãã ã•ã„'); return; }
 
   const btn = document.getElementById('submit-btn');
   btn.disabled = true;
-  btn.textContent = '送信中...';
+  btn.textContent = 'é€ä¿¡ä¸­...';
 
   const record = {
     type: selectedType,
@@ -821,8 +830,8 @@ function submitReport() {
   document.getElementById('report-minutes').value = '';
   document.getElementById('reason-select').value = '';
   document.getElementById('report-note').value = '';
-  setTimeout(() => { btn.disabled = false; btn.textContent = '申請を記録する'; }, 1000);
-  showToast('記録しました！');
+  setTimeout(() => { btn.disabled = false; btn.textContent = 'ç”³è«‹ã‚’è¨˜éŒ²ã™ã‚‹'; }, 1000);
+  showToast('è¨˜éŒ²ã—ã¾ã—ãŸï¼');
 }
 
 // ============================================================
@@ -830,16 +839,16 @@ function submitReport() {
 // ============================================================
 function renderDashboard() {
   const ym = currentMonth.getFullYear() + '-' + String(currentMonth.getMonth() + 1).padStart(2, '0');
-  document.getElementById('month-label').textContent = currentMonth.getFullYear() + '年' + (currentMonth.getMonth() + 1) + '月';
+  document.getElementById('month-label').textContent = currentMonth.getFullYear() + 'å¹´' + (currentMonth.getMonth() + 1) + 'æœˆ';
 
   const monthRecords = records.filter(r => r.date && r.date.startsWith(ym));
   const counts = { late: 0, absent: 0, change: 0 };
   monthRecords.forEach(r => { if (counts[r.type] !== undefined) counts[r.type]++; });
 
   document.getElementById('summary-grid').innerHTML = `
-    <div class="summary-item late"><div class="num">${counts.late}</div><div class="label">遅刻</div></div>
-    <div class="summary-item absent"><div class="num">${counts.absent}</div><div class="label">次勤</div></div>
-    <div class="summary-item change"><div class="num">${counts.change}</div><div class="label">勤務変更</div></div>`;
+    <div class="summary-item late"><div class="num">${counts.late}</div><div class="label">é…åˆ»</div></div>
+    <div class="summary-item absent"><div class="num">${counts.absent}</div><div class="label">æ¬¡å‹¤</div></div>
+    <div class="summary-item change"><div class="num">${counts.change}</div><div class="label">å‹¤å‹™å¤‰æ›´</div></div>`;
 
   // Alerts
   const castCounts = {};
@@ -850,12 +859,12 @@ function renderDashboard() {
   let alerts = [];
   const s = settings;
   for (const [name, c] of Object.entries(castCounts)) {
-    if (c.late >= s.thLate) alerts.push({ level: 'warning', text: `${name}：遅刻 ${c.late}回（${s.thLate}回以上）` });
-    if (c.absent >= s.thAbsent) alerts.push({ level: 'danger', text: `${name}：欠勤 ${c.absent}回（${s.thAbsent}回以上）` });
-    if (c.change >= s.thChange) alerts.push({ level: 'warning', text: `${name}：勤務変更 ${c.change}回（${s.thChange}回以上）` });
+    if (c.late >= s.thLate) alerts.push({ level: 'warning', text: `${name}ï¼šé…åˆ» ${c.late}å›žï¼ˆ${s.thLate}å›žä»¥ä¸Šï¼‰` });
+    if (c.absent >= s.thAbsent) alerts.push({ level: 'danger', text: `${name}ï¼šæ¬ å‹¤ ${c.absent}å›žï¼ˆ${s.thAbsent}å›žä»¥ä¸Šï¼‰` });
+    if (c.change >= s.thChange) alerts.push({ level: 'warning', text: `${name}ï¼šå‹¤å‹™å¤‰æ›´ ${c.change}å›žï¼ˆ${s.thChange}å›žä»¥ä¸Šï¼‰` });
   }
   document.getElementById('alert-area').innerHTML = alerts.map(a =>
-    `<div class="alert-banner alert-${a.level}">⚠️ ${a.text}</div>`
+    `<div class="alert-banner alert-${a.level}">âš ï¸ ${a.text}</div>`
   ).join('');
 
   // Ranking
@@ -864,15 +873,15 @@ function renderDashboard() {
   const sorted = Object.entries(rankData).sort((a, b) => b[1] - a[1]);
 
   if (sorted.length === 0) {
-    document.getElementById('ranking-list').innerHTML = '<div class="empty"><div class="icon">📭</div><p>この月のデータはありません</p></div>';
+    document.getElementById('ranking-list').innerHTML = '<div class="empty"><div class="icon">ðŸ“­</div><p>ã“ã®æœˆã®ãƒ‡ãƒ¼ã‚¿ã¯ã‚ã‚Šã¾ã›ã‚“</p></div>';
   } else {
     document.getElementById('ranking-list').innerHTML = sorted.map(([name, count], i) => {
       const rc = i < 3 ? `rank-${i + 1}` : '';
       const detail = castCounts[name];
       const parts = [];
-      if (detail.late) parts.push(`遅刻${detail.late}`);
-      if (detail.absent) parts.push(`欠勤${detail.absent}`);
-      if (detail.change) parts.push(`変更${detail.change}`);
+      if (detail.late) parts.push(`é…åˆ»${detail.late}`);
+      if (detail.absent) parts.push(`æ¬ å‹¤${detail.absent}`);
+      if (detail.change) parts.push(`å¤‰æ›´${detail.change}`);
       return `<div class="ranking-item"><div class="rank-num ${rc}">${i + 1}</div><div class="record-info"><div class="record-name">${esc(name)}</div><div class="record-detail">${parts.join(' / ')}</div></div><div style="font-size:20px;font-weight:800;color:var(--primary)">${count}</div></div>`;
     }).join('');
   }
@@ -892,13 +901,13 @@ function renderHistory() {
   if (fm) filtered = filtered.filter(r => r.date && r.date.startsWith(fm));
 
   if (filtered.length === 0) {
-    document.getElementById('history-list').innerHTML = '<div class="empty"><div class="icon">📭</div><p>該当する記録がありません</p></div>';
+    document.getElementById('history-list').innerHTML = '<div class="empty"><div class="icon">ðŸ“­</div><p>è©²å½“ã™ã‚‹è¨˜éŒ²ãŒã‚ã‚Šã¾ã›ã‚“</p></div>';
     return;
   }
   document.getElementById('history-list').innerHTML = filtered.map(r => {
-    const t = TYPE_MAP[r.type] || { label: r.type, badge: 'badge-late', icon: '📋' };
-    const minStr = r.minutes ? `（${r.minutes}分）` : '';
-    return `<div class="record-item"><div class="record-info"><div class="record-name">${esc(r.cast)} <span class="badge ${t.badge}">${t.label}</span>${minStr}</div><div class="record-detail">${r.reason ? esc(r.reason) : ''}${r.note ? ' - ' + esc(r.note) : ''}</div></div><div class="record-date">${formatDate(r.date)}</div><button class="record-delete" onclick="deleteRecord('${r.id}')" title="削除">✕</button></div>`;
+    const t = TYPE_MAP[r.type] || { label: r.type, badge: 'badge-late', icon: 'ðŸ“‹' };
+    const minStr = r.minutes ? `ï¼ˆ${r.minutes}åˆ†ï¼‰` : '';
+    return `<div class="record-item"><div class="record-info"><div class="record-name">${esc(r.cast)} <span class="badge ${t.badge}">${t.label}</span>${minStr}</div><div class="record-detail">${r.reason ? esc(r.reason) : ''}${r.note ? ' - ' + esc(r.note) : ''}</div></div><div class="record-date">${formatDate(r.date)}</div><button class="record-delete" onclick="deleteRecord('${r.id}')" title="å‰Šé™¤">âœ•</button></div>`;
   }).join('');
 }
 
@@ -908,30 +917,30 @@ function renderHistory() {
 function addCast() {
   const input = document.getElementById('new-cast-name');
   const name = input.value.trim();
-  if (!name) { showToast('名前を入力してください'); return; }
-  if (casts.includes(name)) { showToast('すでに登録されています'); return; }
+  if (!name) { showToast('åå‰ã‚’å…¥åŠ›ã—ã¦ãã ã•ã„'); return; }
+  if (casts.includes(name)) { showToast('ã™ã§ã«ç™»éŒ²ã•ã‚Œã¦ã„ã¾ã™'); return; }
   casts.push(name);
   casts.sort();
   fbSaveCasts();
   input.value = '';
-  showToast('登録しました');
+  showToast('ç™»éŒ²ã—ã¾ã—ãŸ');
 }
 function removeCast(name) {
-  document.getElementById('confirm-title').textContent = 'キャスト削除';
-  document.getElementById('confirm-msg').textContent = `「${name}」を削除しますか？（記録は残ります）`;
+  document.getElementById('confirm-title').textContent = 'ã‚­ãƒ£ã‚¹ãƒˆå‰Šé™¤';
+  document.getElementById('confirm-msg').textContent = `ã€Œ${name}ã€ã‚’å‰Šé™¤ã—ã¾ã™ã‹ï¼Ÿï¼ˆè¨˜éŒ²ã¯æ®‹ã‚Šã¾ã™ï¼‰`;
   document.getElementById('confirm-btn').onclick = () => {
     casts = casts.filter(c => c !== name);
     fbSaveCasts();
     closeModal();
-    showToast('削除しました');
+    showToast('å‰Šé™¤ã—ã¾ã—ãŸ');
   };
   document.getElementById('confirm-modal').classList.add('show');
 }
 function bulkImportCasts() {
   const input = document.getElementById('bulk-cast-input').value;
   const resultEl = document.getElementById('bulk-result');
-  const names = input.split(/\n|,|、/).map(n => n.trim()).filter(n => n.length > 0);
-  if (names.length === 0) { showToast('名前を入力してください'); return; }
+  const names = input.split(/\n|,|ã€/).map(n => n.trim()).filter(n => n.length > 0);
+  if (names.length === 0) { showToast('åå‰ã‚’å…¥åŠ›ã—ã¦ãã ã•ã„'); return; }
   let added = 0, skipped = 0, skippedNames = [];
   names.forEach(name => {
     if (casts.includes(name)) { skipped++; skippedNames.push(name); }
@@ -940,23 +949,23 @@ function bulkImportCasts() {
   casts.sort();
   fbSaveCasts();
   resultEl.style.display = 'block';
-  let msg = `<span style="color:var(--success);font-weight:600">${added}人を登録しました</span>`;
-  if (skipped > 0) msg += `<br><span style="color:var(--text-light)">重複スキップ: ${skippedNames.join(', ')}（${skipped}人）</span>`;
+  let msg = `<span style="color:var(--success);font-weight:600">${added}äººã‚’ç™»éŒ²ã—ã¾ã—ãŸ</span>`;
+  if (skipped > 0) msg += `<br><span style="color:var(--text-light)">é‡è¤‡ã‚¹ã‚­ãƒƒãƒ—: ${skippedNames.join(', ')}ï¼ˆ${skipped}äººï¼‰</span>`;
   resultEl.innerHTML = msg;
   document.getElementById('bulk-cast-input').value = '';
-  showToast(`${added}人を一括登録しました`);
+  showToast(`${added}äººã‚’ä¸€æ‹¬ç™»éŒ²ã—ã¾ã—ãŸ`);
 }
 function renderCastList() {
   const el = document.getElementById('cast-list');
-  if (casts.length === 0) { el.innerHTML = '<div class="empty"><p>キャストが登録されていません</p></div>'; return; }
+  if (casts.length === 0) { el.innerHTML = '<div class="empty"><p>ã‚­ãƒ£ã‚¹ãƒˆãŒç™»éŒ²ã•ã‚Œã¦ã„ã¾ã›ã‚“</p></div>'; return; }
   el.innerHTML = casts.map(name => {
     const c = { late:0, absent:0, change:0, early:0 };
     records.filter(r => r.cast === name).forEach(r => { if (c[r.type] !== undefined) c[r.type]++; });
-    return `<div class="cast-item"><div><strong>${esc(name)}</strong><div class="cast-counts">${c.late ? `<span class="cast-count badge-late">遅${c.late}</span>` : ''}${c.absent ? `<span class="cast-count badge-absent">欠${c.absent}</span>` : ''}${c.change ? `<span class="cast-count badge-change">変${c.change}</span>` : ''}${c.early ? `<span class="cast-count badge-early">早${c.early}</span>` : ''}</div></div><button class="record-delete" onclick="removeCast('${esc(name)}')" title="削除">✕</button></div>`;
+    return `<div class="cast-item"><div><strong>${esc(name)}</strong><div class="cast-counts">${c.late ? `<span class="cast-count badge-late">é…${c.late}</span>` : ''}${c.absent ? `<span class="cast-count badge-absent">æ¬ ${c.absent}</span>` : ''}${c.change ? `<span class="cast-count badge-change">å¤‰${c.change}</span>` : ''}${c.early ? `<span class="cast-count badge-early">æ—©${c.early}</span>` : ''}</div></div><button class="record-delete" onclick="removeCast('${esc(name)}')" title="å‰Šé™¤">âœ•</button></div>`;
   }).join('');
 
   const sel = document.getElementById('cast-detail-select');
-  sel.innerHTML = '<option value="">キャストを選択</option>' + casts.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  sel.innerHTML = '<option value="">ã‚­ãƒ£ã‚¹ãƒˆã‚’é¸æŠž</option>' + casts.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
 }
 function renderCastDetail() {
   const name = document.getElementById('cast-detail-select').value;
@@ -975,17 +984,17 @@ function renderCastDetail() {
   const sortedMonths = Object.keys(months).sort().reverse();
   el.innerHTML = `
     <div class="summary-grid">
-      <div class="summary-item late"><div class="num">${c.late}</div><div class="label">遅刻（累計）</div></div>
-      <div class="summary-item absent"><div class="num">${c.absent}</div><div class="label">欠勤（累計）</div></div>
-      <div class="summary-item change"><div class="num">${c.change}</div><div class="label">勤務変更（累計）</div></div>
+      <div class="summary-item late"><div class="num">${c.late}</div><div class="label">é…åˆ»ï¼ˆç´¯è¨ˆï¼‰</div></div>
+      <div class="summary-item absent"><div class="num">${c.absent}</div><div class="label">æ¬ å‹¤ï¼ˆç´¯è¨ˆï¼‰</div></div>
+      <div class="summary-item change"><div class="num">${c.change}</div><div class="label">å‹¤å‹™å¤‰æ›´ï¼ˆç´¯è¨ˆï¼‰</div></div>
     </div>
-    <h4 style="font-size:13px;margin:12px 0 8px;color:var(--text-light)">月別内訳</h4>
-    ${sortedMonths.length === 0 ? '<p style="font-size:13px;color:var(--text-light)">記録なし</p>' :
+    <h4 style="font-size:13px;margin:12px 0 8px;color:var(--text-light)">æœˆåˆ¥å†…è¨³</h4>
+    ${sortedMonths.length === 0 ? '<p style="font-size:13px;color:var(--text-light)">è¨˜éŒ²ãªã—</p>' :
       sortedMonths.map(m => {
         const d = months[m]; const parts = [];
-        if (d.late) parts.push(`遅刻${d.late}`); if (d.absent) parts.push(`欠勤${d.absent}`);
-        if (d.change) parts.push(`変更${d.change}`);
-        return `<div style="font-size:13px;padding:6px 0;border-bottom:1px solid var(--border)"><strong>${m.replace('-','年')+'月'}</strong>　${parts.join(' / ')}</div>`;
+        if (d.late) parts.push(`é…åˆ»${d.late}`); if (d.absent) parts.push(`æ¬ å‹¤${d.absent}`);
+        if (d.change) parts.push(`å¤‰æ›´${d.change}`);
+        return `<div style="font-size:13px;padding:6px 0;border-bottom:1px solid var(--border)"><strong>${m.replace('-','å¹´')+'æœˆ'}</strong>ã€€${parts.join(' / ')}</div>`;
       }).join('')}`;
 }
 
@@ -993,10 +1002,10 @@ function renderCastDetail() {
 //  SELECTS
 // ============================================================
 function refreshCastSelects() {
-  const opts = '<option value="">選択してください</option>' + casts.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  const opts = '<option value="">é¸æŠžã—ã¦ãã ã•ã„</option>' + casts.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
   const el = document.getElementById('cast-select');
   if (el) el.innerHTML = opts;
-  const fOpts = '<option value="">全キャスト</option>' + casts.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  const fOpts = '<option value="">å…¨ã‚­ãƒ£ã‚¹ãƒˆ</option>' + casts.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
   const fe = document.getElementById('filter-cast');
   if (fe) fe.innerHTML = fOpts;
 }
@@ -1007,13 +1016,13 @@ function refreshCastSelects() {
 function deleteRecord(id) {
   const r = records.find(r => r.id === id);
   if (!r) return;
-  const t = TYPE_MAP[r.type] || { label: r.type, badge: 'badge-late', icon: '📋' };
-  document.getElementById('confirm-title').textContent = '記録を削除';
-  document.getElementById('confirm-msg').textContent = `${r.cast}の${t.label}（${formatDate(r.date)}）を削除しますか？`;
+  const t = TYPE_MAP[r.type] || { label: r.type, badge: 'badge-late', icon: 'ðŸ“‹' };
+  document.getElementById('confirm-title').textContent = 'è¨˜éŒ²ã‚’å‰Šé™¤';
+  document.getElementById('confirm-msg').textContent = `${r.cast}ã®${t.label}ï¼ˆ${formatDate(r.date)}ï¼‰ã‚’å‰Šé™¤ã—ã¾ã™ã‹ï¼Ÿ`;
   document.getElementById('confirm-btn').onclick = () => {
     fbDeleteRecord(id);
     closeModal();
-    showToast('削除しました');
+    showToast('å‰Šé™¤ã—ã¾ã—ãŸ');
   };
   document.getElementById('confirm-modal').classList.add('show');
 }
@@ -1034,14 +1043,14 @@ function saveSettings() {
     thChange: parseInt(document.getElementById('th-change').value) || 5,
   };
   fbSaveSettings();
-  showToast('設定を保存しました');
+  showToast('è¨­å®šã‚’ä¿å­˜ã—ã¾ã—ãŸ');
 }
 
 // ============================================================
 //  EXPORT / IMPORT
 // ============================================================
 function exportCSV() {
-  if (records.length === 0) { showToast('データがありません'); return; }
+  if (records.length === 0) { showToast('ãƒ‡ãƒ¼ã‚¿ãŒã‚ã‚Šã¾ã›ã‚“'); return; }
   let filtered = [...records];
   const fc = document.getElementById('filter-cast').value;
   const ft = document.getElementById('filter-type').value;
@@ -1049,19 +1058,19 @@ function exportCSV() {
   if (fc) filtered = filtered.filter(r => r.cast === fc);
   if (ft) filtered = filtered.filter(r => r.type === ft);
   if (fm) filtered = filtered.filter(r => r.date && r.date.startsWith(fm));
-  const header = '日付,キャスト名,種類,時間（分）,理由,備考,記録日時';
+  const header = 'æ—¥ä»˜,ã‚­ãƒ£ã‚¹ãƒˆå,ç¨®é¡ž,æ™‚é–“ï¼ˆåˆ†ï¼‰,ç†ç”±,å‚™è€ƒ,è¨˜éŒ²æ—¥æ™‚';
   const rows = filtered.map(r => {
-    const t = TYPE_MAP[r.type] || { label: r.type, badge: 'badge-late', icon: '📋' };
+    const t = TYPE_MAP[r.type] || { label: r.type, badge: 'badge-late', icon: 'ðŸ“‹' };
     return [r.date, r.cast, t.label, r.minutes || '', r.reason || '', r.note || '', r.createdAt]
       .map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',');
   });
-  downloadFile('\uFEFF' + header + '\n' + rows.join('\n'), `勤怠記録_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv;charset=utf-8');
-  showToast('CSVをダウンロードしました');
+  downloadFile('\uFEFF' + header + '\n' + rows.join('\n'), `å‹¤æ€ è¨˜éŒ²_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv;charset=utf-8');
+  showToast('CSVã‚’ãƒ€ã‚¦ãƒ³ãƒ­ãƒ¼ãƒ‰ã—ã¾ã—ãŸ');
 }
 function exportJSON() {
   const data = { records, casts, settings, exportedAt: new Date().toISOString() };
-  downloadFile(JSON.stringify(data, null, 2), `勤怠バックアップ_${new Date().toISOString().split('T')[0]}.json`, 'application/json');
-  showToast('バックアップを保存しました');
+  downloadFile(JSON.stringify(data, null, 2), `å‹¤æ€ ãƒãƒƒã‚¯ã‚¢ãƒƒãƒ—_${new Date().toISOString().split('T')[0]}.json`, 'application/json');
+  showToast('ãƒãƒƒã‚¯ã‚¢ãƒƒãƒ—ã‚’ä¿å­˜ã—ã¾ã—ãŸ');
 }
 function importJSON(event) {
   const file = event.target.files[0];
@@ -1079,21 +1088,21 @@ function importJSON(event) {
       }
       if (data.casts) { casts = data.casts; fbSaveCasts(); }
       if (data.settings) { settings = { ...settings, ...data.settings }; fbSaveSettings(); }
-      showToast('データを復元しました');
-    } catch { showToast('ファイルの読み込みに失敗しました'); }
+      showToast('ãƒ‡ãƒ¼ã‚¿ã‚’å¾©å…ƒã—ã¾ã—ãŸ');
+    } catch { showToast('ãƒ•ã‚¡ã‚¤ãƒ«ã®èª­ã¿è¾¼ã¿ã«å¤±æ•—ã—ã¾ã—ãŸ'); }
   };
   reader.readAsText(file);
   event.target.value = '';
 }
 function clearAllData() {
-  document.getElementById('confirm-title').textContent = '全データ削除';
-  document.getElementById('confirm-msg').textContent = 'すべての記録・キャスト・設定を削除します。この操作は取り消せません。';
+  document.getElementById('confirm-title').textContent = 'å…¨ãƒ‡ãƒ¼ã‚¿å‰Šé™¤';
+  document.getElementById('confirm-msg').textContent = 'ã™ã¹ã¦ã®è¨˜éŒ²ãƒ»ã‚­ãƒ£ã‚¹ãƒˆãƒ»è¨­å®šã‚’å‰Šé™¤ã—ã¾ã™ã€‚ã“ã®æ“ä½œã¯å–ã‚Šæ¶ˆã›ã¾ã›ã‚“ã€‚';
   document.getElementById('confirm-btn').onclick = () => {
     db.ref('records').remove();
     db.ref('casts').remove();
     db.ref('settings').remove();
     closeModal();
-    showToast('全データを削除しました');
+    showToast('å…¨ãƒ‡ãƒ¼ã‚¿ã‚’å‰Šé™¤ã—ã¾ã—ãŸ');
   };
   document.getElementById('confirm-modal').classList.add('show');
 }
@@ -1105,7 +1114,7 @@ function esc(str) { const d = document.createElement('div'); d.textContent = str
 function formatDate(dateStr) {
   if (!dateStr) return '';
   const d = new Date(dateStr + 'T00:00:00');
-  return `${d.getMonth() + 1}/${d.getDate()}(${['日','月','火','水','木','金','土'][d.getDay()]})`;
+  return `${d.getMonth() + 1}/${d.getDate()}(${['æ—¥','æœˆ','ç«','æ°´','æœ¨','é‡‘','åœŸ'][d.getDay()]})`;
 }
 function showToast(msg) {
   const t = document.getElementById('toast');
