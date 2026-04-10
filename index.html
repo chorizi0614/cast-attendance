@@ -392,7 +392,7 @@ textarea { resize: vertical; min-height: 60px; }
 <!-- キャスト管理ページ -->
 <div id="page-cast" class="page">
   <div class="card">
-    <h3>キャスト登��</h3>
+    <h3>キャスト登録</h3>
     <div class="add-row" style="margin-bottom:12px">
       <input type="text" id="new-cast-name" placeholder="キャスト名を入力">
       <button class="btn btn-primary btn-small" onclick="addCast()">追加</button>
@@ -404,7 +404,7 @@ textarea { resize: vertical; min-height: 60px; }
     <p style="font-size:12px;color:var(--text-light);margin-bottom:10px">キャスト名を1行に1人ずつ入力（コピペOK）</p>
     <textarea id="bulk-cast-input" placeholder="例：&#10;あいり&#10;みく&#10;さくら" style="min-height:100px;width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;resize:vertical;margin-bottom:10px"></textarea>
     <div style="display:flex;gap:8px">
-      <button class="btn btn-primary btn-small" onclick="bulkImportCasts()" style="flex:1">一括登��</button>
+      <button class="btn btn-primary btn-small" onclick="bulkImportCasts()" style="flex:1">一括登録</button>
       <button class="btn btn-secondary btn-small" onclick="document.getElementById('bulk-cast-input').value=''" style="flex:0">クリア</button>
     </div>
     <div id="bulk-result" style="margin-top:8px;font-size:13px;display:none"></div>
