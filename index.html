@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>キャスト勤怠管理</title>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<style>
+:root {
+  --primary: #6C5CE7;
+  --primary-light: #A29BFE;
+  --danger: #E17055;
+  --warning: #FDCB6E;
+  --success: #00B894;
+  --info: #0984E3;
+  --bg: #F8F9FD;
+  --card: #FFFFFF;
+  --text: #2D3436;
+  --text-light: #636E72;
+  --border: #DFE6E9;
+  --shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* NAV */
+.nav {
+  background: linear-gradient(135deg, var(--primary), #8B5CF6);
+  color: #fff;
+  padding: 16px 20px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(108,92,231,0.3);
+}
+.nav h1 { font-size: 18px; font-weight: 700; }
+.nav p { font-size: 12px; opacity: 0.8; margin-top: 2px; }
+.nav .status {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  display: inline-block;
+  margin-top: 4px;
+}
+.nav .status.online { background: rgba(0,184,148,0.3); }
+.nav .status.offline { background: rgba(225,112,85,0.3); }
+
+/* TABS */
+.tabs {
+  display: flex;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 58px;
+  z-index: 99;
+  overflow-x: auto;
+}
+.tab {
+  flex: 1;
+  min-width: 80px;
+  padding: 12px 8px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-light);
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+.tab:hover { color: var(--primary); }
+
+/* PAGE */
+.page { display: none; padding: 16px; max-width: 600px; margin: 0 auto; }
+.page.active { display: block; }
+
+/* CARDS */
+.card {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+}
+.card h3 { font-size: 15px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+
+/* FORM */
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text-light); }
+.form-group select, .form-group input, .form-group textarea {
+  width: 100%; padding: 10px 12px; border: 1.5px solid var(--border);
+  border-radius: 8px; font-size: 15px; font-family: inherit;
+  transition: border-color 0.2s; background: #fff; -webkit-appearance: none;
+}
+.form-group select:focus, .form-group input:focus, .form-group textarea:focus { outline: none; border-color: var(--primary); }
+textarea { resize: vertical; min-height: 60px; }
+
+/* TYPE SELECTOR */
+.type-selector { display: flex; gap: 8px; flex-wrap: wrap; }
+.type-btn {
+  flex: 1; min-width: 70px; padding: 10px 6px; border: 2px solid var(--border);
+  border-radius: 10px; background: #fff; cursor: pointer; text-align: center;
+  transition: all 0.2s; font-size: 12px; font-weight: 600;
+}
+.type-btn .icon { font-size: 20px; display: block; margin-bottom: 4px; }
+.type-btn.active { border-color: var(--primary); background: #F3F0FF; color: var(--primary); }
+.type-btn:hover { border-color: var(--primary-light); }
+
+/* BUTTONS */
+.btn {
+  width: 100%; padding: 14px; border: none; border-radius: 10px;
+  font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+}
+.btn-primary { background: linear-gradient(135deg, var(--primary), #8B5CF6); color: #fff; }
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(108,92,231,0.4); }
+.btn-primary:disabled { opacity: 0.5; transform: none; box-shadow: none; cursor: not-allowed; }
+.btn-secondary { background: var(--bg); color: var(--text); border: 1.5px solid var(--border); padding: 10px; font-size: 13px; }
+.btn-danger { background: var(--danger); color: #fff; padding: 10px; font-size: 13px; }
+.btn-small { width: auto; padding: 6px 14px; font-size: 12px; }
+
+/* BADGE */
+.badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+.badge-late { background: #FFEAA7; color: #D68910; }
+.badge-absent { background: #FAD7D3; color: #C0392B; }
+.badge-change { background: #D6EAF8; color: #2471A3; }
+.badge-early { background: #D5F5E3; color: #1E8449; }
+.badge-other { background: #E8DAEF; color: #7D3C98; }
+
+/* SUMMARY CARDS */
+.summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px; }
+.summary-item { background: var(--card); border-radius: 10px; padding: 14px; text-align: center; box-shadow: var(--shadow); }
+.summary-item .num { font-size: 28px; font-weight: 800; }
+.summary-item .label { font-size: 11px; color: var(--text-light); margin-top: 2px; }
+.summary-item.late .num { color: #D68910; }
+.summary-item.absent .num { color: #C0392B; }
+.summary-item.change .num { color: #2471A3; }
+.summary-item.early .num { color: #1E8449; }
+
+/* RECORD LIST */
+.record-item { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); gap: 10px; }
+.record-item:last-child { border-bottom: none; }
+.record-info { flex: 1; min-width: 0; }
+.record-name { font-weight: 700; font-size: 14px; }
+.record-detail { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+.record-date { font-size: 11px; color: var(--text-light); white-space: nowrap; }
+.record-delete { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 16px; padding: 4px; opacity: 0.5; transition: opacity 0.2s; }
+.record-delete:hover { opacity: 1; }
+
+/* CAST LIST */
+.cast-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.cast-item:last-child { border-bottom: none; }
+.cast-counts { display: flex; gap: 6px; }
+.cast-count { font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+
+/* FILTER */
+.filter-row { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.filter-row select, .filter-row input {
+  flex: 1; min-width: 120px; padding: 8px 10px; border: 1.5px solid var(--border);
+  border-radius: 8px; font-size: 13px; font-family: inherit; background: #fff;
+}
+
+/* ALERT BANNER */
+.alert-banner { padding: 10px 14px; border-radius: 10px; margin-bottom: 12px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.alert-warning { background: #FFF3CD; color: #856404; }
+.alert-danger { background: #F8D7DA; color: #721C24; }
+
+/* TOAST */
+.toast {
+  position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(100px);
+  background: #2D3436; color: #fff; padding: 12px 24px; border-radius: 10px;
+  font-size: 14px; font-weight: 600; z-index: 200; opacity: 0; transition: all 0.3s; white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+/* RANKING */
+.ranking-item { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); gap: 10px; }
+.ranking-item:last-child { border-bottom: none; }
+.rank-num { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; background: var(--bg); color: var(--text-light); }
+.rank-1 { background: #FFEAA7; color: #D68910; }
+.rank-2 { background: #DFE6E9; color: #636E72; }
+.rank-3 { background: #FAD7D3; color: #C0392B; }
+
+/* MODAL */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 300; align-items: flex-end; justify-content: center; }
+.modal-overlay.show { display: flex; }
+.modal { background: var(--card); border-radius: 16px 16px 0 0; padding: 20px; width: 100%; max-width: 600px; max-height: 80vh; overflow-y: auto; animation: slideUp 0.3s; }
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.modal h3 { margin-bottom: 16px; }
+.modal-close { float: right; background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-light); }
+
+/* EMPTY STATE */
+.empty { text-align: center; padding: 40px 20px; color: var(--text-light); }
+.empty .icon { font-size: 40px; margin-bottom: 12px; }
+.empty p { font-size: 14px; }
+
+/* MONTH PICKER */
+.month-nav { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 16px; }
+.month-nav button { background: var(--card); border: 1.5px solid var(--border); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; transition: all 0.2s; }
+.month-nav button:hover { border-color: var(--primary); color: var(--primary); }
+.month-nav span { font-size: 16px; font-weight: 700; min-width: 120px; text-align: center; }
+
+/* THRESHOLD SETTINGS */
+.threshold-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 13px; }
+.threshold-row input { width: 60px; padding: 6px 8px; border: 1.5px solid var(--border); border-radius: 6px; font-size: 13px; text-align: center; }
+.threshold-row label { min-width: 80px; }
+
+.add-row { display: flex; gap: 8px; }
+.add-row input { flex: 1; }
+.add-row button { white-space: nowrap; }
+
+/* PASSWORD MODAL */
+.pw-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 400; align-items: center; justify-content: center; }
+.pw-overlay.show { display: flex; }
+.pw-box { background: var(--card); border-radius: 16px; padding: 24px; width: 90%; max-width: 340px; text-align: center; animation: slideUp 0.3s; }
+.pw-box h3 { margin-bottom: 6px; }
+.pw-box p { font-size: 12px; color: var(--text-light); margin-bottom: 16px; }
+.pw-box input { width: 100%; padding: 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 16px; text-align: center; letter-spacing: 4px; margin-bottom: 12px; }
+.pw-box input:focus { outline: none; border-color: var(--primary); }
+.pw-error { color: var(--danger); font-size: 12px; margin-bottom: 8px; display: none; }
+.lock-icon { font-size: 10px; margin-left: 2px; }
+.lock-btn {
+  position: fixed; bottom: 20px; right: 20px; width: 48px; height: 48px;
+  border-radius: 50%; background: var(--primary); color: #fff; border: none;
+  font-size: 20px; cursor: pointer; box-shadow: 0 4px 12px rgba(108,92,231,0.4);
+  z-index: 50; display: none; transition: all 0.2s;
+}
+.lock-btn:hover { transform: scale(1.1); }
+
+/* LOADING */
+.loading-overlay {
+  position: fixed; inset: 0; background: var(--bg); z-index: 500;
+  display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 16px;
+}
+.loading-overlay.hide { display: none; }
+.spinner { width: 40px; height: 40px; border: 4px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* SETUP SCREEN */
+.setup-screen { max-width: 500px; margin: 40px auto; padding: 20px; }
+.setup-screen h2 { text-align: center; margin-bottom: 8px; }
+.setup-screen .sub { text-align: center; font-size: 13px; color: var(--text-light); margin-bottom: 20px; }
+.setup-screen textarea { width: 100%; min-height: 200px; font-family: monospace; font-size: 12px; padding: 12px; border: 1.5px solid var(--border); border-radius: 8px; margin-bottom: 12px; }
+
+@media (max-width: 400px) {
+  .type-selector { gap: 6px; }
+  .type-btn { min-width: 60px; padding: 8px 4px; font-size: 11px; }
+  .type-btn .icon { font-size: 18px; }
+  .summary-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+  <div style="font-size:14px;color:var(--text-light)">データを読み込み中...</div>
+</div>
+
+<!-- ===== SETUP SCREEN (Firebase未設定時) ===== -->
+<div id="setup-screen" class="setup-screen" style="display:none">
+  <div class="card">
+    <h2>初期セットアッブ</h2>
+    <p class="sub">Firebaseの設定情報を貼り付けてください</p>
+    <textarea id="firebase-config-input" placeholder='{
+  "apiKey": "AIza...",
+  "authDomain": "your-project.firebaseapp.com",
+  "databaseURL": "https://your-project-default-rtdb.firebaseio.com",
+  "projectId": "your-project",
+  "storageBucket": "your-project.appspot.com",
+  "messagingSenderId": "123456789",
+  "appId": "1:123:web:abc..."
+}'></textarea>
+    <button class="btn btn-primary" onclick="saveFirebaseConfig()">設定を保存して開始</button>
+    <p style="font-size:11px;color:var(--text-light);margin-top:12px;text-align:center">
+      ※ セットアップガイドの手順に沿って設定してください
+    </p>
+  </div>
+</div>
+
+<!-- ===== MAIN APP ===== -->
+<div id="main-app" style="display:none">
+
+<div class="nav">
+  <h1>キャスト勤怠管理</h1>
+  <p>遅刻・欠勤・勤務変更の記録と管理</p>
+  <span class="status" id="conn-status"></span>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('report')">申請</button>
+  <button class="tab" onclick="switchTab('dashboard')">ダッシュボード</button>
+  <button class="tab" onclick="switchTab('history')">履歴<span class="lock-icon">🔒</span></button>
+  <button class="tab" onclick="switchTab('cast')">キャスト<span class="lock-icon">🔒</span></button>
+  <button class="tab" onclick="switchTab('settings')">設定<span class="lock-icon">🔒</span></button>
+</div>
+
+<!-- 申請ページ -->
+<div id="page-report" class="page active">
+  <div class="card">
+    <h3>新規申請</h3>
+    <div class="form-group">
+      <label>種類</label>
+      <div class="type-selector">
+        <button class="type-btn active" data-type="late" onclick="selectType(this)">
+          <span class="icon">⏰</span>遅刻
+        </button>
+        <button class="type-btn" data-type="absent" onclick="selectType(this)">
+          <span class="icon">✖️</span>欠勤
+        </button>
+        <button class="type-btn" data-type="change" onclick="selectType(this)">
+          <span class="icon">🔄</span>勤務変更
+        </button>
+        <button class="type-btn" data-type="early" onclick="selectType(this)">
+          <span class="icon">🚪</span>早退
+        </button>
+        <button class="type-btn" data-type="other" onclick="selectType(this)">
+          <span class="icon">📋</span>その他
+        </button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>キャスト名</label>
+      <select id="cast-select">
+        <option value="">選択してください</option>
+      </select>
+    </div>
+    <div class="form-group" id="date-group">
+      <label>日付</label>
+      <input type="date" id="report-date">
+    </div>
+    <div class="form-group" id="time-group">
+      <label id="time-label">遅刻時間（分）</label>
+      <input type="number" id="report-minutes" placeholder="例: 30" min="0">
+    </div>
+    <div class="form-group">
+      <label>理由</label>
+      <select id="reason-select">
+        <option value="">選択してください</option>
+        <option value="体調不良">体調不良</option>
+        <option value="交通樟関の遅延">交通機関の遅延</option>
+        <option value="家庭の事情">家庭の事情</option>
+        <option value="シフト調整">シフト調整</option>
+        <option value="急用">急用</option>
+        <option value="その他">その他（備考に記入）</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>備考（任意）</label>
+      <textarea id="report-note" placeholder="詳細があれば記入"></textarea>
+    </div>
+    <button class="btn btn-primary" id="submit-btn" onclick="submitReport()">申請を記録する</button>
+  </div>
+</div>
+
+<!-- ダッシュボードページ -->
+<div id="page-dashboard" class="page">
+  <div class="month-nav">
+    <button onclick="changeMonth(-1)">◀</button>
+    <span id="month-label"></span>
+    <button onclick="changeMonth(1)">▶</button>
+  </div>
+  <div id="alert-area"></div>
+  <div class="summary-grid" id="summary-grid"></div>
+  <div class="card">
+    <h3>キャスト別ランキング（申請回数が多い順）</h3>
+    <div id="ranking-list"></div>
+  </div>
+</div>
+
+<!-- 履歴ページ -->
+<div id="page-history" class="page">
+  <div class="filter-row">
+    <select id="filter-cast" onchange="renderHistory()"><option value="">全キャスト</option></select>
+    <select id="filter-type" onchange="renderHistory()">
+      <option value="">全種類</option>
+      <option value="late">遅刻</option>
+      <option value="absent">欣勤</option>
+      <option value="change">勤務変更</option>
+      <option value="early">早退</option>
+      <option value="other">その他</option>
+    </select>
+  </div>
+  <div class="filter-row">
+    <input type="month" id="filter-month" onchange="renderHistory()">
+  </div>
+  <div class="card" id="history-card"><div id="history-list"></div></div>
+  <button class="btn btn-secondary" onclick="exportCSV()" style="margin-top:8px">CSVエクスポート</button>
+</div>
+
+<!-- キャスト管理ページ -->
+<div id="page-cast" class="page">
+  <div class="card">
+    <h3>キャスト登録</h3>
+    <div class="add-row" style="margin-bottom:12px">
+      <input type="text" id="new-cast-name" placeholder="キャスト名を入力">
+      <button class="btn btn-primary btn-small" onclick="addCast()">追加</button>
+    </div>
+    <div id="cast-list"></div>
+  </div>
+  <div class="card">
+    <h3>一括インポート</h3>
+    <p style="font-size:12px;color:var(--text-light);margin-bottom:10px">キャスト名を1行に1人ずつ入力（コピペOK）</p>
+    <textarea id="bulk-cast-input" placeholder="例：&#10;あいり&#10;みく&#10;さくら" style="min-height:100px;width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;resize:vertical;margin-bottom:10px"></textarea>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary btn-small" onclick="bulkImportCasts()" style="flex:1">一括登録</button>
+      <button class="btn btn-secondary btn-small" onclick="document.getElementById('bulk-cast-input').value=''" style="flex:0">クリア</button>
+    </div>
+    <div id="bulk-result" style="margin-top:8px;font-size:13px;display:none"></div>
+  </div>
+  <div class="card">
+    <h3>キャスト別 集計</h3>
+    <select id="cast-detail-select" onchange="renderCastDetail()"><option value="">キャストを選択</option></select>
+    <div id="cast-detail" style="margin-top:12px"></div>
+  </div>
+</div>
+
+<!-- 設定ページ -->
+<div id="page-settings" class="page">
+  <div class="card">
+    <h3>アラート設定</h3>
+    <p style="font-size:12px;color:var(--text-light);margin-bottom:12px">月間の回数がこの値以上になるとダッシュボードに譩告が出ます</p>
+    <div class="threshold-row"><label>⏰ 遅刻</label><input type="number" id="th-late" min="1" value="3" onchange="saveSettings()"> 回</div>
+    <div class="threshold-row"><label>✖️ 次勤</label><input type="number" id="th-absent" min="1" value="2" onchange="saveSettings()"> 回</div>
+    <div class="threshold-row"><label>🔄 勤務変更</label><input type="number" id="th-change" min="1" value="5" onchange="saveSettings()"> 回</div>
+    <div class="threshold-row"><label>🚪 早退</label><input type="number" id="th-early" min="1" value="3" onchange="saveSettings()"> 回</div>
+  </div>
+  <div class="card">
+    <h3>管理者パスワード変更</h3>
+    <div class="form-group"><label>現在のパスワード</label><input type="password" id="pw-current" placeholder="現在のパスワード"></div>
+    <div class="form-group"><label>新しいパスワード（4〜20文字）</label><input type="password" id="pw-new" placeholder="新しいパスワード"></div>
+    <div class="form-group"><label>新しいパスワード（確認）</label><input type="password" id="pw-confirm" placeholder="もう一度入力"></div>
+    <button class="btn btn-primary" onclick="changePassword()">パスワードを変更</button>
+  </div>
+  <div class="card">
+    <h3>データ管理</h3>
+    <button class="btn btn-secondary" onclick="exportJSON()" style="margin-bottom:8px">データをバックアップ（JSON）</button>
+    <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()" style="margin-bottom:8px">データを復元（JSON）</button>
+    <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(event)">
+    <button class="btn btn-danger" onclick="clearAllData()">全データ削除</button>
+  </div>
+  <div class="card">
+    <h3>Firebase設定リセット</h3>
+    <p style="font-size:12px;color:var(--text-light);margin-bottom:12px">Firebase接続情報をリセットして再設定します</p>
+    <button class="btn btn-secondary" onclick="resetFirebaseConfig()">Firebase設定をリセット</button>
+  </div>
+</div>
+
+</div><!-- /main-app -->
+
+<!-- PASSWORD MODAL -->
+<div class="pw-overlay" id="pw-overlay">
+  <div class="pw-box">
+    <h3>管理者パスワード</h3>
+    <p>管理ページにアクセスするにはパスワードを入力してください</p>
+    <input type="password" id="pw-input" placeholder="パスワード" maxlength="20" onkeydown="if(event.key==='Enter')checkPassword()">
+    <div class="pw-error" id="pw-error">パスワードが違います</div>
+    <button class="btn btn-primary" onclick="checkPassword()">解錠</button>
+    <button class="btn btn-secondary" onclick="closePwModal()" style="margin-top:8px">キャンセル</button>
+  </div>
+</div>
+
+<!-- LOCK BUTTON -->
+<button class="lock-btn" id="lock-btn" onclick="lockAdmin()" title="管理画面をロック">🔒</button>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- DELETE CONFIRM MODAL -->
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <h3 id="confirm-title">確認</h3>
+    <p id="confirm-msg" style="margin-bottom:16px;font-size:14px"></p>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-secondary" onclick="closeModal()" style="flex:1">キャンセル</button>
+      <button class="btn btn-danger" id="confirm-btn" onclick="" style="flex:1">削除</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  CONFIG & FIREBASE
+// ============================================================
+const ADMIN_TABS = ['history', 'cast', 'settings'];
+const NO_DATE_TYPES = ['late', 'early', 'other'];
+const DEFAULT_PASSWORD = '0000';
+const DEFAULT_CASTS = ['あむ','める','らん','はお','ゆゆ','りり','ぷり','るる','なこ','るい','ゆめ','あっと','うさび','せいら','ひめ','ねむち','しゃる','まり》'];
+
+const TYPE_MAP = {
+  late:   { label: '遅刻',   badge: 'badge-late',   icon: '⏰' },
+  absent: { label: '次勤',   badge: 'badge-absent',  icon: '✖️' },
+  change: { label: '勤務変更', badge: 'badge-change', icon: '🔄' },
+  early:  { label: '早退',   badge: 'badge-early',   icon: '🚪' },
+  other:  { label: 'その他', badge: 'badge-other',   icon: '📋' }
+};
+
+let db = null;
+let records = [];
+let casts = [];
+let settings = { thLate: 3, thAbsent: 2, thChange: 5, thEarly: 3 };
+let adminPassword = DEFAULT_PASSWORD;
+let selectedType = 'late';
+let currentMonth = new Date();
+let adminUnlocked = false;
+let pendingTab = null;
+let dataLoaded = { records: false, casts: false, settings: false, password: false };
+
+// ============================================================
+//  FIREBASE INIT
+// ============================================================
+function getStoredConfig() {
+  try { return JSON.parse(localStorage.getItem('firebase_config')); }
+  catch { return null; }
+}
+
+function saveFirebaseConfig() {
+  const input = document.getElementById('firebase-config-input').value.trim();
+  try {
+    const config = JSON.parse(input);
+    if (!config.databaseURL) throw new Error('databaseURL is required');
+    localStorage.setItem('firebase_config', JSON.stringify(config));
+    location.reload();
+  } catch (e) {
+    showToast('JSON形式が正しくありません: ' + e.message);
+  }
+}
+
+function resetFirebaseConfig() {
+  if (confirm('Firebase設定をリセットしますか？')) {
+    localStorage.removeItem('firebase_config');
+    location.reload();
+  }
+}
+
+function initFirebase(config) {
+  try {
+    firebase.initializeApp(config);
+    db = firebase.database();
+
+    // Connection status
+    db.ref('.info/connected').on('value', (snap) => {
+      const el = document.getElementById('conn-status');
+      if (snap.val() === true) {
+        el.textContent = 'オンライン';
+        el.className = 'status online';
+      } else {
+        el.textContent = 'オフライン';
+        el.className = 'status offline';
+      }
+    });
+
+    // Enable offline persistence
+    db.goOnline();
+
+    // Listen for data
+    listenRecords();
+    listenCasts();
+    listenSettings();
+    listenPassword();
+
+    return true;
+  } catch (e) {
+    console.error('Firebase init error:', e);
+    return false;
+  }
+}
+
+// ============================================================
+//  REALTIME LISTENERS
+// ============================================================
+function listenRecords() {
+  db.ref('records').on('value', (snap) => {
+    records = [];
+    const val = snap.val();
+    if (val) {
+      for (const [key, rec] of Object.entries(val)) {
+        records.push({ id: key, ...rec });
+      }
+    }
+    records.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+    dataLoaded.records = true;
+    checkAllLoaded();
+    refreshActiveView();
+  });
+}
+
+function listenCasts() {
+  db.ref('casts').on('value', (snap) => {
+    const val = snap.val();
+    casts = val ? (Array.isArray(val) ? val.filter(Boolean) : Object.values(val).filter(Boolean)) : [];
+    dataLoaded.casts = true;
+    checkAllLoaded();
+    refreshCastSelects();
+    refreshActiveView();
+  });
+}
+
+function listenSettings() {
+  db.ref('settings').on('value', (snap) => {
+    const val = snap.val();
+    if (val) settings = { ...settings, ...val };
+    dataLoaded.settings = true;
+    checkAllLoaded();
+    applySettingsToUI();
+  });
+}
+
+function listenPassword() {
+  db.ref('adminPassword').on('value', (snap) => {
+    adminPassword = snap.val() || DEFAULT_PASSWORD;
+    dataLoaded.password = true;
+    checkAllLoaded();
+  });
+}
+
+function checkAllLoaded() {
+  if (dataLoaded.records && dataLoaded.casts && dataLoaded.settings && dataLoaded.password) {
+    document.getElementById('loading').classList.add('hide');
+  }
+}
+
+function refreshActiveView() {
+  const active = document.querySelector('.page.active');
+  if (!active) return;
+  const id = active.id.replace('page-', '');
+  if (id === 'dashboard') renderDashboard();
+  if (id === 'history') renderHistory();
+  if (id === 'cast') renderCastList();
+}
+
+// ============================================================
+//  FIREBASE WRITE HELPERS
+// ============================================================
+function fbSaveCasts() {
+  db.ref('casts').set(casts);
+}
+function fbSaveSettings() {
+  db.ref('settings').set(settings);
+}
+function fbSavePassword(pw) {
+  db.ref('adminPassword').set(pw);
+}
+function fbAddRecord(record) {
+  const ref = db.ref('records').push();
+  record.id = ref.key;
+  ref.set(record);
+  return record;
+}
+function fbDeleteRecord(id) {
+  db.ref('records/' + id).remove();
+}
+
+// ============================================================
+//  INIT APP
+// ============================================================
+function initApp() {
+  document.getElementById('report-date').value = new Date().toISOString().split('T')[0];
+  updateTimeLabel();
+  updateLockUI();
+
+  // Init default casts if empty (checked after listener fires)
+  setTimeout(() => {
+    if (casts.length === 0) {
+      casts = [...DEFAULT_CASTS];
+      fbSaveCasts();
+    }
+  }, 3000);
+}
+
+// ============================================================
+//  STARTUP
+// ============================================================
+(function boot() {
+  const config = getStoredConfig();
+  if (!config) {
+    // Show setup screen
+    document.getElementById('loading').classList.add('hide');
+    document.getElementById('setup-screen').style.display = 'block';
+    return;
+  }
+
+  document.getElementById('main-app').style.display = 'block';
+  const ok = initFirebase(config);
+  if (!ok) {
+    document.getElementById('loading').classList.add('hide');
+    showToast('Firebase接続に失敗しました。設定を確認してください。');
+    return;
+  }
+  initApp();
+
+  // Safety timeout for loading
+  setTimeout(() => {
+    document.getElementById('loading').classList.add('hide');
+  }, 8000);
+})();
+
+// ============================================================
+//  ADMIN PASSWORD
+// ============================================================
+function showPwModal(tab) {
+  pendingTab = tab;
+  document.getElementById('pw-input').value = '';
+  document.getElementById('pw-error').style.display = 'none';
+  document.getElementById('pw-overlay').classList.add('show');
+  setTimeout(() => document.getElementById('pw-input').focus(), 100);
+}
+function closePwModal() {
+  document.getElementById('pw-overlay').classList.remove('show');
+  pendingTab = null;
+}
+function checkPassword() {
+  const input = document.getElementById('pw-input').value;
+  if (input === adminPassword) {
+    adminUnlocked = true;
+    closePwModal();
+    updateLockUI();
+    if (pendingTab) doSwitchTab(pendingTab);
+    showToast('管理画面を解錠しました');
+  } else {
+    document.getElementById('pw-error').style.display = 'block';
+    document.getElementById('pw-input').value = '';
+    document.getElementById('pw-input').focus();
+  }
+}
+function lockAdmin() {
+  adminUnlocked = false;
+  updateLockUI();
+  const activePage = document.querySelector('.page.active');
+  if (activePage) {
+    const id = activePage.id.replace('page-', '');
+    if (ADMIN_TABS.includes(id)) doSwitchTab('report');
+  }
+  showToast('ロックしました');
+}
+function updateLockUI() {
+  document.querySelectorAll('.lock-icon').forEach(el => { el.style.display = adminUnlocked ? 'none' : ''; });
+  document.getElementById('lock-btn').style.display = adminUnlocked ? 'block' : 'none';
+}
+function changePassword() {
+  const current = document.getElementById('pw-current').value;
+  const newPw = document.getElementById('pw-new').value;
+  const confirm = document.getElementById('pw-confirm').value;
+  if (current !== adminPassword) { showToast('現在のパスワードが違います'); return; }
+  if (newPw.length < 4) { showToast('パスワードは4文字以上にしてください'); return; }
+  if (newPw !== confirm) { showToast('新しいパスワードが一致しません'); return; }
+  fbSavePassword(newPw);
+  document.getElementById('pw-current').value = '';
+  document.getElementById('pw-new').value = '';
+  document.getElementById('pw-confirm').value = '';
+  showToast('パスワードを変更しました');
+}
+
+// ============================================================
+//  TABS
+// ============================================================
+function switchTab(name) {
+  if (ADMIN_TABS.includes(name) && !adminUnlocked) { showPwModal(name); return; }
+  doSwitchTab(name);
+}
+function doSwitchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelector(`.tab[onclick*="${name}"]`).classList.add('active');
+  document.getElementById(`page-${name}`).classList.add('active');
+  if (name === 'dashboard') renderDashboard();
+  if (name === 'history') renderHistory();
+  if (name === 'cast') renderCastList();
+}
+
+// ============================================================
+//  TYPE SELECTOR
+// ============================================================
+function selectType(btn) {
+  document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedType = btn.dataset.type;
+  updateTimeLabel();
+}
+function updateTimeLabel() {
+  const tg = document.getElementById('time-group');
+  const tl = document.getElementById('time-label');
+  const dg = document.getElementById('date-group');
+  dg.style.display = NO_DATE_TYPES.includes(selectedType) ? 'none' : '';
+  if (selectedType === 'late') { tg.style.display = ''; tl.textContent = '遅刻時間（分）'; }
+  else if (selectedType === 'early') { tg.style.display = ''; tl.textContent = '早退時間（分）'; }
+  else if (selectedType === 'change') { tg.style.display = ''; tl.textContent = '変更時間（分・任意）'; }
+  else { tg.style.display = 'none'; }
+}
+
+// ============================================================
+//  SUBMIT REPORT
+// ============================================================
+function submitReport() {
+  const castName = document.getElementById('cast-select').value;
+  const date = NO_DATE_TYPES.includes(selectedType)
+    ? new Date().toISOString().split('T')[0]
+    : document.getElementById('report-date').value;
+  const minutes = document.getElementById('report-minutes').value;
+  const reason = document.getElementById('reason-select').value;
+  const note = document.getElementById('report-note').value.trim();
+
+  if (!castName) { showToast('キャストを選択してください'); return; }
+  if (!date) { showToast('日付を入力してください'); return; }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = '送信中...';
+
+  const record = {
+    type: selectedType,
+    cast: castName,
+    date: date,
+    minutes: minutes ? parseInt(minutes) : null,
+    reason: reason,
+    note: note,
+    createdAt: new Date().toISOString()
+  };
+
+  fbAddRecord(record);
+
+  // Reset
+  document.getElementById('report-minutes').value = '';
+  document.getElementById('reason-select').value = '';
+  document.getElementById('report-note').value = '';
+  setTimeout(() => { btn.disabled = false; btn.textContent = '申請を記録する'; }, 1000);
+  showToast('記録しました！');
+}
+
+// ============================================================
+//  DASHBOARD
+// ============================================================
+function renderDashboard() {
+  const ym = currentMonth.getFullYear() + '-' + String(currentMonth.getMonth() + 1).padStart(2, '0');
+  document.getElementById('month-label').textContent = currentMonth.getFullYear() + '年' + (currentMonth.getMonth() + 1) + '月';
+
+  const monthRecords = records.filter(r => r.date && r.date.startsWith(ym));
+  const counts = { late: 0, absent: 0, change: 0, early: 0 };
+  monthRecords.forEach(r => { if (counts[r.type] !== undefined) counts[r.type]++; });
+
+  document.getElementById('summary-grid').innerHTML = `
+    <div class="summary-item late"><div class="num">${counts.late}</div><div class="label">遅刻</div></div>
+    <div class="summary-item absent"><div class="num">${counts.absent}</div><div class="label">次勤</div></div>
+    <div class="summary-item change"><div class="num">${counts.change}</div><div class="label">勤務変更</div></div>
+    <div class="summary-item early"><div class="num">${counts.early}</div><div class="label">早退</div></div>`;
+
+  // Alerts
+  const castCounts = {};
+  monthRecords.forEach(r => {
+    if (!castCounts[r.cast]) castCounts[r.cast] = { late:0, absent:0, change:0, early:0 };
+    if (castCounts[r.cast][r.type] !== undefined) castCounts[r.cast][r.type]++;
+  });
+  let alerts = [];
+  const s = settings;
+  for (const [name, c] of Object.entries(castCounts)) {
+    if (c.late >= s.thLate) alerts.push({ level: 'warning', text: `${name}：遅刻 ${c.late}回（${s.thLate}回以上）` });
+    if (c.absent >= s.thAbsent) alerts.push({ level: 'danger', text: `${name}：欠勤 ${c.absent}回（${s.thAbsent}回以上）` });
+    if (c.change >= s.thChange) alerts.push({ level: 'warning', text: `${name}：勤務変更 ${c.change}回（${s.thChange}回以上）` });
+    if (c.early >= s.thEarly) alerts.push({ level: 'warning', text: `${name}：早退 ${c.early}回（${s.thEarly}回以上）` });
+  }
+  document.getElementById('alert-area').innerHTML = alerts.map(a =>
+    `<div class="alert-banner alert-${a.level}">⚠️ ${a.text}</div>`
+  ).join('');
+
+  // Ranking
+  const rankData = {};
+  monthRecords.forEach(r => { rankData[r.cast] = (rankData[r.cast] || 0) + 1; });
+  const sorted = Object.entries(rankData).sort((a, b) => b[1] - a[1]);
+
+  if (sorted.length === 0) {
+    document.getElementById('ranking-list').innerHTML = '<div class="empty"><div class="icon">📭</div><p>この月のデータはありません</p></div>';
+  } else {
+    document.getElementById('ranking-list').innerHTML = sorted.map(([name, count], i) => {
+      const rc = i < 3 ? `rank-${i + 1}` : '';
+      const detail = castCounts[name];
+      const parts = [];
+      if (detail.late) parts.push(`遅刻${detail.late}`);
+      if (detail.absent) parts.push(`次勤${detail.absent}`);
+      if (detail.change) parts.push(`変更${detail.change}`);
+      if (detail.early) parts.push(`早退${detail.early}`);
+      return `<div class="ranking-item"><div class="rank-num ${rc}">${i + 1}</div><div class="record-info"><div class="record-name">${esc(name)}</div><div class="record-detail">${parts.join(' / ')}</div></div><div style="font-size:20px;font-weight:800;color:var(--primary)">${count}</div></div>`;
+    }).join('');
+  }
+}
+function changeMonth(delta) { currentMonth.setMonth(currentMonth.getMonth() + delta); renderDashboard(); }
+
+// ============================================================
+//  HISTORY
+// ============================================================
+function renderHistory() {
+  let filtered = [...records];
+  const fc = document.getElementById('filter-cast').value;
+  const ft = document.getElementById('filter-type').value;
+  const fm = document.getElementById('filter-month').value;
+  if (fc) filtered = filtered.filter(r => r.cast === fc);
+  if (ft) filtered = filtered.filter(r => r.type === ft);
+  if (fm) filtered = filtered.filter(r => r.date && r.date.startsWith(fm));
+
+  if (filtered.length === 0) {
+    document.getElementById('history-list').innerHTML = '<div class="empty"><div class="icon">📭</div><p>該当する記録がありません</p></div>';
+    return;
+  }
+  document.getElementById('history-list').innerHTML = filtered.map(r => {
+    const t = TYPE_MAP[r.type] || TYPE_MAP.other;
+    const minStr = r.minutes ? `（${r.minutes}分）` : '';
+    return `<div class="record-item"><div class="record-info"><div class="record-name">${esc(r.cast)} <span class="badge ${t.badge}">${t.label}</span>${minStr}</div><div class="record-detail">${r.reason ? esc(r.reason) : ''}${r.note ? ' - ' + esc(r.note) : ''}</div></div><div class="record-date">${formatDate(r.date)}</div><button class="record-delete" onclick="deleteRecord('${r.id}')" title="削除">✕</button></div>`;
+  }).join('');
+}
+
+// ============================================================
+//  CAST MANAGEMENT
+// ============================================================
+function addCast() {
+  const input = document.getElementById('new-cast-name');
+  const name = input.value.trim();
+  if (!name) { showToast('名前を入力してください'); return; }
+  if (casts.includes(name)) { showToast('すでに登録されています'); return; }
+  casts.push(name);
+  casts.sort();
+  fbSaveCasts();
+  input.value = '';
+  showToast('登録しました');
+}
+function removeCast(name) {
+  document.getElementById('confirm-title').textContent = 'キャスト削除';
+  document.getElementById('confirm-msg').textContent = `「${name}」を削除しますか？（記録は残ります）`;
+  document.getElementById('confirm-btn').onclick = () => {
+    casts = casts.filter(c => c !== name);
+    fbSaveCasts();
+    closeModal();
+    showToast('削除しました');
+  };
+  document.getElementById('confirm-modal').classList.add('show');
+}
+function bulkImportCasts() {
+  const input = document.getElementById('bulk-cast-input').value;
+  const resultEl = document.getElementById('bulk-result');
+  const names = input.split(/\n|,|、/).map(n => n.trim()).filter(n => n.length > 0);
+  if (names.length === 0) { showToast('名前を入力してください'); return; }
+  let added = 0, skipped = 0, skippedNames = [];
+  names.forEach(name => {
+    if (casts.includes(name)) { skipped++; skippedNames.push(name); }
+    else { casts.push(name); added++; }
+  });
+  casts.sort();
+  fbSaveCasts();
+  resultEl.style.display = 'block';
+  let msg = `<span style="color:var(--success);font-weight:600">${added}人を登録しました</span>`;
+  if (skipped > 0) msg += `<br><span style="color:var(--text-light)">重複スキップ: ${skippedNames.join(', ')}（${skipped}人）</span>`;
+  resultEl.innerHTML = msg;
+  document.getElementById('bulk-cast-input').value = '';
+  showToast(`${added}人を一括登録しました`);
+}
+function renderCastList() {
+  const el = document.getElementById('cast-list');
+  if (casts.length === 0) { el.innerHTML = '<div class="empty"><p>キャストが登録されていません</p></div>'; return; }
+  el.innerHTML = casts.map(name => {
+    const c = { late:0, absent:0, change:0, early:0 };
+    records.filter(r => r.cast === name).forEach(r => { if (c[r.type] !== undefined) c[r.type]++; });
+    return `<div class="cast-item"><div><strong>${esc(name)}</strong><div class="cast-counts">${c.late ? `<span class="cast-count badge-late">遅${c.late}</span>` : ''}${c.absent ? `<span class="cast-count badge-absent">欠${c.absent}</span>` : ''}${c.change ? `<span class="cast-count badge-change">変${c.change}</span>` : ''}${c.early ? `<span class="cast-count badge-early">早${c.early}</span>` : ''}</div></div><button class="record-delete" onclick="removeCast('${esc(name)}')" title="削除">✕</button></div>`;
+  }).join('');
+
+  const sel = document.getElementById('cast-detail-select');
+  sel.innerHTML = '<option value="">キャストを選択</option>' + casts.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+}
+function renderCastDetail() {
+  const name = document.getElementById('cast-detail-select').value;
+  const el = document.getElementById('cast-detail');
+  if (!name) { el.innerHTML = ''; return; }
+  const castRecords = records.filter(r => r.cast === name);
+  const c = { late:0, absent:0, change:0, early:0, other:0 };
+  castRecords.forEach(r => { if (c[r.type] !== undefined) c[r.type]++; });
+  const months = {};
+  castRecords.forEach(r => {
+    if (!r.date) return;
+    const m = r.date.substring(0, 7);
+    if (!months[m]) months[m] = { late:0, absent:0, change:0, early:0, other:0 };
+    if (months[m][r.type] !== undefined) months[m][r.type]++;
+  });
+  const sortedMonths = Object.keys(months).sort().reverse();
+  el.innerHTML = `
+    <div class="summary-grid">
+      <div class="summary-item late"><div class="num">${c.late}</div><div class="label">遅刻（累計）</div></div>
+      <div class="summary-item absent"><div class="num">${c.absent}</div><div class="label">次勤（累計）</div></div>
+      <div class="summary-item change"><div class="num">${c.change}</div><div class="label">勤務変更（累計）</div></div>
+      <div class="summary-item early"><div class="num">${c.early}</div><div class="label">早退（累計）</div></div>
+    </div>
+    <h4 style="font-size:13px;margin:12px 0 8px;color:var(--text-light)">月別内訏</h4>
+    ${sortedMonths.length === 0 ? '<p style="font-size:13px;color:var(--text-light)">記録なし</p>' :
+      sortedMonths.map(m => {
+        const d = months[m]; const parts = [];
+        if (d.late) parts.push(`遅刻${d.late}`); if (d.absent) parts.push(`次勤${d.absent}`);
+        if (d.change) parts.push(`変更${d.change}`); if (d.early) parts.push(`早退${d.early}`);
+        if (d.other) parts.push(`他${d.other}`);
+        return `<div style="font-size:13px;padding:6px 0;border-bottom:1px solid var(--border)"><strong>${m.replace('-','年')+'月'}</strong>　${parts.join(' / ')}</div>`;
+      }).join('')}`;
+}
+
+// ============================================================
+//  SELECTS
+// ============================================================
+function refreshCastSelects() {
+  const opts = '<option value="">選択してください</option>' + casts.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  const el = document.getElementById('cast-select');
+  if (el) el.innerHTML = opts;
+  const fOpts = '<option value="">全キャスト</option>' + casts.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  const fe = document.getElementById('filter-cast');
+  if (fe) fe.innerHTML = fOpts;
+}
+
+// ============================================================
+//  DELETE RECORD
+// ============================================================
+function deleteRecord(id) {
+  const r = records.find(r => r.id === id);
+  if (!r) return;
+  const t = TYPE_MAP[r.type] || TYPE_MAP.other;
+  document.getElementById('confirm-title').textContent = '記録を削除';
+  document.getElementById('confirm-msg').textContent = `${r.cast}の${t.label}（${formatDate(r.date)}）を削除しますか？`;
+  document.getElementById('confirm-btn').onclick = () => {
+    fbDeleteRecord(id);
+    closeModal();
+    showToast('削除しました');
+  };
+  document.getElementById('confirm-modal').classList.add('show');
+}
+
+// ============================================================
+//  SETTINGS
+// ============================================================
+function applySettingsToUI() {
+  const el = (id) => document.getElementById(id);
+  if (el('th-late')) el('th-late').value = settings.thLate;
+  if (el('th-absent')) el('th-absent').value = settings.thAbsent;
+  if (el('th-change')) el('th-change').value = settings.thChange;
+  if (el('th-early')) el('th-early').value = settings.thEarly;
+}
+function saveSettings() {
+  settings = {
+    thLate: parseInt(document.getElementById('th-late').value) || 3,
+    thAbsent: parseInt(document.getElementById('th-absent').value) || 2,
+    thChange: parseInt(document.getElementById('th-change').value) || 5,
+    thEarly: parseInt(document.getElementById('th-early').value) || 3,
+  };
+  fbSaveSettings();
+  showToast('設定を保存しました');
+}
+
+// ============================================================
+//  EXPORT / IMPORT
+// ============================================================
+function exportCSV() {
+  if (records.length === 0) { showToast('データがありません'); return; }
+  let filtered = [...records];
+  const fc = document.getElementById('filter-cast').value;
+  const ft = document.getElementById('filter-type').value;
+  const fm = document.getElementById('filter-month').value;
+  if (fc) filtered = filtered.filter(r => r.cast === fc);
+  if (ft) filtered = filtered.filter(r => r.type === ft);
+  if (fm) filtered = filtered.filter(r => r.date && r.date.startsWith(fm));
+  const header = '日付,キャスト名,種類,時間（分）,理由,備考,記録日時';
+  const rows = filtered.map(r => {
+    const t = TYPE_MAP[r.type] || TYPE_MAP.other;
+    return [r.date, r.cast, t.label, r.minutes || '', r.reason || '', r.note || '', r.createdAt]
+      .map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',');
+  });
+  downloadFile('\uFEFF' + header + '\n' + rows.join('\n'), `勤怠記録_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv;charset=utf-8');
+  showToast('CSVをダウンロードしました');
+}
+function exportJSON() {
+  const data = { records, casts, settings, exportedAt: new Date().toISOString() };
+  downloadFile(JSON.stringify(data, null, 2), `勤怠バックアップ_${new Date().toISOString().split('T')[0]}.json`, 'application/json');
+  showToast('バックアップを保存しました');
+}
+function importJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.records && Array.isArray(data.records)) {
+        // Merge records into Firebase
+        data.records.forEach(r => {
+          const { id, ...rest } = r;
+          db.ref('records').push().set(rest);
+        });
+      }
+      if (data.casts) { casts = data.casts; fbSaveCasts(); }
+      if (data.settings) { settings = { ...settings, ...data.settings }; fbSaveSettings(); }
+      showToast('データを復元しました');
+    } catch { showToast('ファイルの読み込みに失敗しました'); }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+function clearAllData() {
+  document.getElementById('confirm-title').textContent = '全データ削除';
+  document.getElementById('confirm-msg').textContent = 'すべての記録・キャスト・設定を削除します。この操作は取り消せません。';
+  document.getElementById('confirm-btn').onclick = () => {
+    db.ref('records').remove();
+    db.ref('casts').remove();
+    db.ref('settings').remove();
+    closeModal();
+    showToast('全データを削除しました');
+  };
+  document.getElementById('confirm-modal').classList.add('show');
+}
+
+// ============================================================
+//  UTILS
+// ============================================================
+function esc(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr + 'T00:00:00');
+  return `${d.getMonth() + 1}/${d.getDate()}(${['日','月','火','水','木','金','土'][d.getDay()]})`;
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+function closeModal() { document.getElementById('confirm-modal').classList.remove('show'); }
+function downloadFile(content, filename, type) {
+  const blob = new Blob([content], { type });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+</script>
+</body>
+</html>
