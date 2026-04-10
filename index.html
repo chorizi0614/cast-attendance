@@ -321,12 +321,6 @@ textarea { resize: vertical; min-height: 60px; }
         <button class="type-btn" data-type="change" onclick="selectType(this)">
           <span class="icon">🔄</span>勤務変更
         </button>
-        <button class="type-btn" data-type="early" onclick="selectType(this)">
-          <span class="icon">🚪</span>早退
-        </button>
-        <button class="type-btn" data-type="other" onclick="selectType(this)">
-          <span class="icon">📋</span>その他
-        </button>
       </div>
     </div>
     <div class="form-group">
@@ -352,7 +346,6 @@ textarea { resize: vertical; min-height: 60px; }
         <option value="家庭の事情">家庭の事情</option>
         <option value="シフト調整">シフト調整</option>
         <option value="急用">急用</option>
-        <option value="その他">その他（備考に記入）</option>
       </select>
     </div>
     <div class="form-group">
@@ -385,10 +378,8 @@ textarea { resize: vertical; min-height: 60px; }
     <select id="filter-type" onchange="renderHistory()">
       <option value="">全種類</option>
       <option value="late">遅刻</option>
-      <option value="absent">欣勤</option>
+      <option value="absent">欠勤</option>
       <option value="change">勤務変更</option>
-      <option value="early">早退</option>
-      <option value="other">その他</option>
     </select>
   </div>
   <div class="filter-row">
@@ -401,7 +392,7 @@ textarea { resize: vertical; min-height: 60px; }
 <!-- キャスト管理ページ -->
 <div id="page-cast" class="page">
   <div class="card">
-    <h3>キャスト登録</h3>
+    <h3>キャスト登��</h3>
     <div class="add-row" style="margin-bottom:12px">
       <input type="text" id="new-cast-name" placeholder="キャスト名を入力">
       <button class="btn btn-primary btn-small" onclick="addCast()">追加</button>
@@ -413,7 +404,7 @@ textarea { resize: vertical; min-height: 60px; }
     <p style="font-size:12px;color:var(--text-light);margin-bottom:10px">キャスト名を1行に1人ずつ入力（コピペOK）</p>
     <textarea id="bulk-cast-input" placeholder="例：&#10;あいり&#10;みく&#10;さくら" style="min-height:100px;width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;resize:vertical;margin-bottom:10px"></textarea>
     <div style="display:flex;gap:8px">
-      <button class="btn btn-primary btn-small" onclick="bulkImportCasts()" style="flex:1">一括登録</button>
+      <button class="btn btn-primary btn-small" onclick="bulkImportCasts()" style="flex:1">一括登��</button>
       <button class="btn btn-secondary btn-small" onclick="document.getElementById('bulk-cast-input').value=''" style="flex:0">クリア</button>
     </div>
     <div id="bulk-result" style="margin-top:8px;font-size:13px;display:none"></div>
@@ -429,11 +420,10 @@ textarea { resize: vertical; min-height: 60px; }
 <div id="page-settings" class="page">
   <div class="card">
     <h3>アラート設定</h3>
-    <p style="font-size:12px;color:var(--text-light);margin-bottom:12px">月間の回数がこの値以上になるとダッシュボードに譩告が出ます</p>
+    <p style="font-size:12px;color:var(--text-light);margin-bottom:12px">月間の回数がこの値以上になるとダッシュボードに警告が出ます</p>
     <div class="threshold-row"><label>⏰ 遅刻</label><input type="number" id="th-late" min="1" value="3" onchange="saveSettings()"> 回</div>
-    <div class="threshold-row"><label>✖️ 次勤</label><input type="number" id="th-absent" min="1" value="2" onchange="saveSettings()"> 回</div>
+    <div class="threshold-row"><label>✖️ 欠勤</label><input type="number" id="th-absent" min="1" value="2" onchange="saveSettings()"> 回</div>
     <div class="threshold-row"><label>🔄 勤務変更</label><input type="number" id="th-change" min="1" value="5" onchange="saveSettings()"> 回</div>
-    <div class="threshold-row"><label>🚪 早退</label><input type="number" id="th-early" min="1" value="3" onchange="saveSettings()"> 回</div>
   </div>
   <div class="card">
     <h3>管理者パスワード変更</h3>
@@ -494,22 +484,20 @@ textarea { resize: vertical; min-height: 60px; }
 //  CONFIG & FIREBASE
 // ============================================================
 const ADMIN_TABS = ['history', 'cast', 'settings'];
-const NO_DATE_TYPES = ['late', 'early', 'other'];
+const NO_DATE_TYPES = ['late'];
 const DEFAULT_PASSWORD = '0000';
-const DEFAULT_CASTS = ['あむ','める','らん','はお','ゆゆ','りり','ぷり','るる','なこ','るい','ゆめ','あっと','うさび','せいら','ひめ','ねむち','しゃる','まり》'];
+const DEFAULT_CASTS = ['あむ','める','らん','はお','ゆゆ','りり','ぷり','るる','なこ','るい','ゆめ','あっと','うさび','せいら','ひめ','ねむち','しゃる','まりか'];
 
 const TYPE_MAP = {
   late:   { label: '遅刻',   badge: 'badge-late',   icon: '⏰' },
-  absent: { label: '次勤',   badge: 'badge-absent',  icon: '✖️' },
+  absent: { label: '欠勤',   badge: 'badge-absent',  icon: '✖️' },
   change: { label: '勤務変更', badge: 'badge-change', icon: '🔄' },
-  early:  { label: '早退',   badge: 'badge-early',   icon: '🚪' },
-  other:  { label: 'その他', badge: 'badge-other',   icon: '📋' }
 };
 
 let db = null;
 let records = [];
 let casts = [];
-let settings = { thLate: 3, thAbsent: 2, thChange: 5, thEarly: 3 };
+let settings = { thLate: 3, thAbsent: 2, thChange: 5 };
 let adminPassword = DEFAULT_PASSWORD;
 let selectedType = 'late';
 let currentMonth = new Date();
@@ -794,7 +782,6 @@ function updateTimeLabel() {
   const dg = document.getElementById('date-group');
   dg.style.display = NO_DATE_TYPES.includes(selectedType) ? 'none' : '';
   if (selectedType === 'late') { tg.style.display = ''; tl.textContent = '遅刻時間（分）'; }
-  else if (selectedType === 'early') { tg.style.display = ''; tl.textContent = '早退時間（分）'; }
   else if (selectedType === 'change') { tg.style.display = ''; tl.textContent = '変更時間（分・任意）'; }
   else { tg.style.display = 'none'; }
 }
@@ -846,19 +833,18 @@ function renderDashboard() {
   document.getElementById('month-label').textContent = currentMonth.getFullYear() + '年' + (currentMonth.getMonth() + 1) + '月';
 
   const monthRecords = records.filter(r => r.date && r.date.startsWith(ym));
-  const counts = { late: 0, absent: 0, change: 0, early: 0 };
+  const counts = { late: 0, absent: 0, change: 0 };
   monthRecords.forEach(r => { if (counts[r.type] !== undefined) counts[r.type]++; });
 
   document.getElementById('summary-grid').innerHTML = `
     <div class="summary-item late"><div class="num">${counts.late}</div><div class="label">遅刻</div></div>
     <div class="summary-item absent"><div class="num">${counts.absent}</div><div class="label">次勤</div></div>
-    <div class="summary-item change"><div class="num">${counts.change}</div><div class="label">勤務変更</div></div>
-    <div class="summary-item early"><div class="num">${counts.early}</div><div class="label">早退</div></div>`;
+    <div class="summary-item change"><div class="num">${counts.change}</div><div class="label">勤務変更</div></div>`;
 
   // Alerts
   const castCounts = {};
   monthRecords.forEach(r => {
-    if (!castCounts[r.cast]) castCounts[r.cast] = { late:0, absent:0, change:0, early:0 };
+    if (!castCounts[r.cast]) castCounts[r.cast] = { late:0, absent:0, change:0 };
     if (castCounts[r.cast][r.type] !== undefined) castCounts[r.cast][r.type]++;
   });
   let alerts = [];
@@ -867,7 +853,6 @@ function renderDashboard() {
     if (c.late >= s.thLate) alerts.push({ level: 'warning', text: `${name}：遅刻 ${c.late}回（${s.thLate}回以上）` });
     if (c.absent >= s.thAbsent) alerts.push({ level: 'danger', text: `${name}：欠勤 ${c.absent}回（${s.thAbsent}回以上）` });
     if (c.change >= s.thChange) alerts.push({ level: 'warning', text: `${name}：勤務変更 ${c.change}回（${s.thChange}回以上）` });
-    if (c.early >= s.thEarly) alerts.push({ level: 'warning', text: `${name}：早退 ${c.early}回（${s.thEarly}回以上）` });
   }
   document.getElementById('alert-area').innerHTML = alerts.map(a =>
     `<div class="alert-banner alert-${a.level}">⚠️ ${a.text}</div>`
@@ -886,9 +871,8 @@ function renderDashboard() {
       const detail = castCounts[name];
       const parts = [];
       if (detail.late) parts.push(`遅刻${detail.late}`);
-      if (detail.absent) parts.push(`次勤${detail.absent}`);
+      if (detail.absent) parts.push(`欠勤${detail.absent}`);
       if (detail.change) parts.push(`変更${detail.change}`);
-      if (detail.early) parts.push(`早退${detail.early}`);
       return `<div class="ranking-item"><div class="rank-num ${rc}">${i + 1}</div><div class="record-info"><div class="record-name">${esc(name)}</div><div class="record-detail">${parts.join(' / ')}</div></div><div style="font-size:20px;font-weight:800;color:var(--primary)">${count}</div></div>`;
     }).join('');
   }
@@ -912,7 +896,7 @@ function renderHistory() {
     return;
   }
   document.getElementById('history-list').innerHTML = filtered.map(r => {
-    const t = TYPE_MAP[r.type] || TYPE_MAP.other;
+    const t = TYPE_MAP[r.type] || { label: r.type, badge: 'badge-late', icon: '📋' };
     const minStr = r.minutes ? `（${r.minutes}分）` : '';
     return `<div class="record-item"><div class="record-info"><div class="record-name">${esc(r.cast)} <span class="badge ${t.badge}">${t.label}</span>${minStr}</div><div class="record-detail">${r.reason ? esc(r.reason) : ''}${r.note ? ' - ' + esc(r.note) : ''}</div></div><div class="record-date">${formatDate(r.date)}</div><button class="record-delete" onclick="deleteRecord('${r.id}')" title="削除">✕</button></div>`;
   }).join('');
@@ -979,30 +963,28 @@ function renderCastDetail() {
   const el = document.getElementById('cast-detail');
   if (!name) { el.innerHTML = ''; return; }
   const castRecords = records.filter(r => r.cast === name);
-  const c = { late:0, absent:0, change:0, early:0, other:0 };
+  const c = { late:0, absent:0, change:0 };
   castRecords.forEach(r => { if (c[r.type] !== undefined) c[r.type]++; });
   const months = {};
   castRecords.forEach(r => {
     if (!r.date) return;
     const m = r.date.substring(0, 7);
-    if (!months[m]) months[m] = { late:0, absent:0, change:0, early:0, other:0 };
+    if (!months[m]) months[m] = { late:0, absent:0, change:0 };
     if (months[m][r.type] !== undefined) months[m][r.type]++;
   });
   const sortedMonths = Object.keys(months).sort().reverse();
   el.innerHTML = `
     <div class="summary-grid">
       <div class="summary-item late"><div class="num">${c.late}</div><div class="label">遅刻（累計）</div></div>
-      <div class="summary-item absent"><div class="num">${c.absent}</div><div class="label">次勤（累計）</div></div>
+      <div class="summary-item absent"><div class="num">${c.absent}</div><div class="label">欠勤（累計）</div></div>
       <div class="summary-item change"><div class="num">${c.change}</div><div class="label">勤務変更（累計）</div></div>
-      <div class="summary-item early"><div class="num">${c.early}</div><div class="label">早退（累計）</div></div>
     </div>
-    <h4 style="font-size:13px;margin:12px 0 8px;color:var(--text-light)">月別内訏</h4>
+    <h4 style="font-size:13px;margin:12px 0 8px;color:var(--text-light)">月別内訳</h4>
     ${sortedMonths.length === 0 ? '<p style="font-size:13px;color:var(--text-light)">記録なし</p>' :
       sortedMonths.map(m => {
         const d = months[m]; const parts = [];
-        if (d.late) parts.push(`遅刻${d.late}`); if (d.absent) parts.push(`次勤${d.absent}`);
-        if (d.change) parts.push(`変更${d.change}`); if (d.early) parts.push(`早退${d.early}`);
-        if (d.other) parts.push(`他${d.other}`);
+        if (d.late) parts.push(`遅刻${d.late}`); if (d.absent) parts.push(`欠勤${d.absent}`);
+        if (d.change) parts.push(`変更${d.change}`);
         return `<div style="font-size:13px;padding:6px 0;border-bottom:1px solid var(--border)"><strong>${m.replace('-','年')+'月'}</strong>　${parts.join(' / ')}</div>`;
       }).join('')}`;
 }
@@ -1025,7 +1007,7 @@ function refreshCastSelects() {
 function deleteRecord(id) {
   const r = records.find(r => r.id === id);
   if (!r) return;
-  const t = TYPE_MAP[r.type] || TYPE_MAP.other;
+  const t = TYPE_MAP[r.type] || { label: r.type, badge: 'badge-late', icon: '📋' };
   document.getElementById('confirm-title').textContent = '記録を削除';
   document.getElementById('confirm-msg').textContent = `${r.cast}の${t.label}（${formatDate(r.date)}）を削除しますか？`;
   document.getElementById('confirm-btn').onclick = () => {
@@ -1044,14 +1026,12 @@ function applySettingsToUI() {
   if (el('th-late')) el('th-late').value = settings.thLate;
   if (el('th-absent')) el('th-absent').value = settings.thAbsent;
   if (el('th-change')) el('th-change').value = settings.thChange;
-  if (el('th-early')) el('th-early').value = settings.thEarly;
 }
 function saveSettings() {
   settings = {
     thLate: parseInt(document.getElementById('th-late').value) || 3,
     thAbsent: parseInt(document.getElementById('th-absent').value) || 2,
     thChange: parseInt(document.getElementById('th-change').value) || 5,
-    thEarly: parseInt(document.getElementById('th-early').value) || 3,
   };
   fbSaveSettings();
   showToast('設定を保存しました');
@@ -1071,7 +1051,7 @@ function exportCSV() {
   if (fm) filtered = filtered.filter(r => r.date && r.date.startsWith(fm));
   const header = '日付,キャスト名,種類,時間（分）,理由,備考,記録日時';
   const rows = filtered.map(r => {
-    const t = TYPE_MAP[r.type] || TYPE_MAP.other;
+    const t = TYPE_MAP[r.type] || { label: r.type, badge: 'badge-late', icon: '📋' };
     return [r.date, r.cast, t.label, r.minutes || '', r.reason || '', r.note || '', r.createdAt]
       .map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',');
   });
