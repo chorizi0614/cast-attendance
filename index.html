@@ -653,6 +653,35 @@ function fbAddRecord(record) {
   const ref = db.ref('records').push();
   record.id = ref.key;
   ref.set(record);
+
+  // === NEW: Xserver sync (shifts.json update) ===
+  try {
+    const payload = {
+      cast: record.cast,
+      date: record.date,
+      type: record.type,
+      lateMinutes: record.minutes || 0,
+      newTime: '',
+      reason: record.reason || '',
+      note: record.note || '',
+      id: record.id,
+      createdAt: record.createdAt
+    };
+    fetch('https://cast.linaria-cafe.com/admin/attendance_apply.php?key=msgroup-attendance-7a3f9c1e', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    .then(r => r.json())
+    .then(j => {
+      if (j.ok) console.log('[Xserver] shifts updated:', j.action);
+      else console.warn('[Xserver] sync failed:', j.err);
+    })
+    .catch(e => console.warn('[Xserver] network error:', e));
+  } catch (e) {
+    console.warn('[Xserver] try-catch:', e);
+  }
+
   return record;
 }
 function fbDeleteRecord(id) {
