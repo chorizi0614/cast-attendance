@@ -257,6 +257,101 @@ textarea { resize: vertical; min-height: 60px; }
   .type-btn .icon { font-size: 18px; }
   .summary-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
 }
+
+/* PROOF TAB (病院領収書) */
+.tab-badge {
+  display: inline-block; background: var(--danger); color: #fff;
+  font-size: 10px; font-weight: 700; padding: 1px 6px;
+  border-radius: 10px; margin-left: 4px; min-width: 16px; text-align: center;
+}
+.tab-badge:empty { display: none; }
+
+.proof-help {
+  background: linear-gradient(135deg, #FFF9E5, #FFF3CD);
+  border-radius: 12px; padding: 12px 14px; margin-bottom: 14px;
+  font-size: 13px; line-height: 1.6; color: #856404;
+  border-left: 4px solid var(--warning);
+}
+.proof-help strong { color: #6C5300; }
+
+.proof-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+.proof-stat {
+  background: var(--card); border-radius: 10px; padding: 14px 8px;
+  text-align: center; box-shadow: var(--shadow); border-top: 3px solid transparent;
+}
+.proof-stat.urgent { border-top-color: var(--danger); }
+.proof-stat.warning { border-top-color: var(--warning); }
+.proof-stat.done { border-top-color: var(--success); }
+.proof-stat .num { font-size: 26px; font-weight: 800; line-height: 1; }
+.proof-stat.urgent .num { color: var(--danger); }
+.proof-stat.warning .num { color: #D68910; }
+.proof-stat.done .num { color: var(--success); }
+.proof-stat .label { font-size: 10px; color: var(--text-light); margin-top: 6px; line-height: 1.2; }
+
+.proof-section-title {
+  font-size: 13px; font-weight: 700; margin: 18px 0 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.proof-section-title.urgent { color: var(--danger); }
+.proof-section-title.warning { color: #D68910; }
+.proof-section-title.ok { color: var(--success); }
+.proof-section-title.done { color: var(--text-light); }
+.proof-section-title .count {
+  background: var(--bg); color: var(--text-light); font-size: 11px;
+  padding: 2px 8px; border-radius: 10px; font-weight: 600;
+}
+
+.proof-card {
+  background: var(--card); border-radius: 14px; padding: 14px;
+  margin-bottom: 10px; box-shadow: var(--shadow); display: flex;
+  gap: 12px; align-items: center; border-left: 4px solid transparent;
+  transition: transform 0.15s;
+}
+.proof-card:active { transform: scale(0.98); }
+.proof-card.urgent { border-left-color: var(--danger); }
+.proof-card.warning { border-left-color: var(--warning); }
+.proof-card.ok { border-left-color: var(--success); }
+.proof-card.done { border-left-color: var(--text-light); opacity: 0.85; }
+.proof-card-avatar {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), #8B5CF6);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 700; font-size: 18px; flex-shrink: 0;
+}
+.proof-card-info { flex: 1; min-width: 0; }
+.proof-card-name { font-weight: 700; font-size: 15px; margin-bottom: 2px; }
+.proof-card-date { font-size: 12px; color: var(--text-light); margin-bottom: 5px; line-height: 1.3; }
+.proof-card-status {
+  font-size: 11px; font-weight: 600; display: inline-block;
+  padding: 3px 10px; border-radius: 10px;
+}
+.proof-card-status.urgent { background: #FAD7D3; color: var(--danger); }
+.proof-card-status.warning { background: #FFF3CD; color: #D68910; }
+.proof-card-status.ok { background: #D5F5E3; color: var(--success); }
+.proof-card-status.done { background: #E8E4DF; color: var(--text-light); }
+
+.proof-card-cta {
+  background: var(--primary); color: #fff; border: none; border-radius: 10px;
+  padding: 0 16px; font-size: 13px; font-weight: 700; cursor: pointer;
+  flex-shrink: 0; min-height: 44px; min-width: 70px; white-space: nowrap;
+  text-decoration: none; display: inline-flex; align-items: center; justify-content: center;
+  transition: transform 0.15s;
+}
+.proof-card-cta:active { transform: scale(0.93); }
+.proof-card-cta.done { background: var(--bg); color: var(--info); border: 1.5px solid var(--border); }
+
+.proof-empty { text-align: center; padding: 40px 20px; color: var(--text-light); }
+.proof-empty .icon { font-size: 48px; margin-bottom: 12px; }
+.proof-empty p { font-size: 14px; }
+.proof-empty .sub { font-size: 11px; margin-top: 8px; color: var(--text-light); }
+
+@media (max-width: 380px) {
+  .proof-card-avatar { width: 40px; height: 40px; font-size: 16px; }
+  .proof-card-name { font-size: 14px; }
+  .proof-card-date { font-size: 11px; }
+  .proof-card-cta { padding: 0 12px; font-size: 12px; min-width: 60px; }
+}
+
 </style>
 </head>
 <body>
@@ -299,6 +394,7 @@ textarea { resize: vertical; min-height: 60px; }
 
 <div class="tabs">
   <button class="tab active" onclick="switchTab('report')">申請</button>
+  <button class="tab" onclick="switchTab('proof')">📎 領収書<span class="tab-badge" id="proof-tab-badge"></span></button>
   <button class="tab" onclick="switchTab('dashboard')">ダッシュボード</button>
   <button class="tab" onclick="switchTab('history')">履歴<span class="lock-icon">🔒</span></button>
   <button class="tab" onclick="switchTab('cast')">キャスト<span class="lock-icon">🔒</span></button>
@@ -359,8 +455,28 @@ textarea { resize: vertical; min-height: 60px; }
       🖼 日付がはっきり見える写真を「📎 領収書を提出する」ボタンから提出
     </div>
     <button class="btn btn-primary" id="submit-btn" onclick="submitReport()">申請を記録する</button>
-    <button class="btn btn-secondary" onclick="openProofModal()" style="margin-top:8px;font-size:13px">📎 領収書を提出する</button>
+    <button class="btn btn-secondary" onclick="switchTab('proof')" style="margin-top:8px;font-size:13px">📎 領収書タブを開く</button>
   </div>
+</div>
+
+<!-- 領収書ページ -->
+<div id="page-proof" class="page">
+  <div class="proof-help">
+    <strong>💡 病院領収書の提出について</strong><br>
+    体調不良で当日休んだ場合、3日以内に病院の領収書(日付付き)を提出してください。<br>
+    <span style="font-size:11px">📸 写真を撮るか、保存済みの写真からアップロード。<strong>後日でもOK</strong>。</span>
+  </div>
+
+  <div class="form-group" style="margin-bottom:8px">
+    <select id="proof-tab-cast" onchange="renderProofTab()">
+      <option value="">👥 全員を表示 (管理者向け)</option>
+    </select>
+  </div>
+
+  <div id="proof-summary-area"></div>
+  <div id="proof-tab-list"><div class="proof-empty"><div class="icon">📡</div><p>読み込み中…</p></div></div>
+
+  <input type="file" id="proof-file-input2" accept="image/jpeg,image/png,image/heic,image/heif,.jpg,.jpeg,.png,.heic,.heif" capture="environment" style="display:none">
 </div>
 
 <!-- ダッシュボードページ -->
@@ -649,6 +765,8 @@ function listenPassword() {
 function checkAllLoaded() {
   if (dataLoaded.records && dataLoaded.casts && dataLoaded.settings && dataLoaded.password) {
     document.getElementById('loading').classList.add('hide');
+    if (typeof updateProofTabBadge === 'function') updateProofTabBadge();
+    if (typeof refreshProofCastSelect === 'function') refreshProofCastSelect();
   }
 }
 
@@ -823,6 +941,7 @@ function doSwitchTab(name) {
   if (name === 'dashboard') renderDashboard();
   if (name === 'history') renderHistory();
   if (name === 'cast') renderCastList();
+  if (name === 'proof') { refreshProofCastSelect(); renderProofTab(); }
 }
 
 // ============================================================
@@ -1080,8 +1199,146 @@ function deleteRecord(id) {
 // ============================================================
 //  PROOF UPLOAD (病院領収書)
 // ============================================================
+function needsProof(rec) {
+  return rec.type === 'absent' && (
+    (rec.reason || '').includes('体調不良') || (rec.reason || '').includes('病気')
+  );
+}
+
+function classifyProof(rec) {
+  if (rec.proof_url) return 'done';
+  const days = rec.days_since_apply ?? 0;
+  if (days > 3) return 'urgent';
+  if (days >= 2) return 'warning';
+  return 'ok';
+}
+
+function urgencyLabel(rec) {
+  if (rec.proof_url) return '✅ 提出済';
+  const days = rec.days_since_apply ?? 0;
+  if (days > 3) return '⚠️ ' + days + '日経過 (期限超過)';
+  if (days >= 2) return days + '日前 (残り' + Math.max(0, 3 - days) + '日)';
+  if (days === 1) return '1日前 (まだ余裕)';
+  return '今日 (まだ余裕)';
+}
+
+async function fetchAllProofRecords(castFilter) {
+  const url = castFilter
+    ? `${XSERVER_BASE}/attendance_records.php?key=${XSERVER_KEY}&cast=${encodeURIComponent(castFilter)}`
+    : `${XSERVER_BASE}/attendance_records.php?key=${XSERVER_KEY}`;
+  try {
+    const r = await fetch(url);
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.err || 'fetch failed');
+    return j.records || [];
+  } catch (e) {
+    console.error('proof fetch failed', e);
+    return [];
+  }
+}
+
+function refreshProofCastSelect() {
+  const sel = document.getElementById('proof-tab-cast');
+  if (!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">👥 全員を表示 (管理者向け)</option>' + casts.map(c => '<option value="' + esc(c) + '">' + esc(c) + '</option>').join('');
+  sel.value = cur;
+}
+
+async function renderProofTab() {
+  const castFilter = document.getElementById('proof-tab-cast').value;
+  const listEl = document.getElementById('proof-tab-list');
+  const summaryEl = document.getElementById('proof-summary-area');
+  listEl.innerHTML = '<div class="proof-empty"><div class="icon">📡</div><p>読み込み中…</p></div>';
+  
+  const records = await fetchAllProofRecords(castFilter);
+  const targets = records.filter(rec => needsProof(rec) || rec.proof_url);
+  
+  const grouped = {urgent: [], warning: [], ok: [], done: []};
+  for (const rec of targets) grouped[classifyProof(rec)].push(rec);
+  const pendingCount = grouped.urgent.length + grouped.warning.length + grouped.ok.length;
+  
+  summaryEl.innerHTML = `
+    <div class="proof-summary">
+      <div class="proof-stat urgent"><div class="num">${grouped.urgent.length}</div><div class="label">期限超過</div></div>
+      <div class="proof-stat warning"><div class="num">${grouped.warning.length + grouped.ok.length}</div><div class="label">未提出</div></div>
+      <div class="proof-stat done"><div class="num">${grouped.done.length}</div><div class="label">提出済</div></div>
+    </div>
+  `;
+  
+  if (targets.length === 0) {
+    listEl.innerHTML = '<div class="proof-empty"><div class="icon">📭</div><p>' + (castFilter ? esc(castFilter) + ' さんの提出対象はありません' : '提出対象の記録はありません') + '</p><p class="sub">体調不良で当日休みを申請した場合のみ表示されます</p></div>';
+    return;
+  }
+  
+  const sections = [
+    {key: 'urgent', title: '⚠️ 期限超過', cls: 'urgent'},
+    {key: 'warning', title: '🟠 急いで提出', cls: 'warning'},
+    {key: 'ok', title: '🟢 余裕あり', cls: 'ok'},
+    {key: 'done', title: '✅ 提出済', cls: 'done'}
+  ];
+  
+  let html = '';
+  for (const sec of sections) {
+    const items = grouped[sec.key];
+    if (items.length === 0) continue;
+    html += '<div class="proof-section-title ' + sec.cls + '">' + sec.title + ' <span class="count">' + items.length + '件</span></div>';
+    for (const rec of items) {
+      const initial = (rec.cast || '?').slice(0, 1);
+      const status = urgencyLabel(rec);
+      const cls = classifyProof(rec);
+      const cta = rec.proof_url
+        ? '<a class="proof-card-cta done" href="' + rec.proof_url + '" target="_blank" rel="noopener">📷 見る</a>'
+        : '<button class="proof-card-cta" onclick="triggerProofUpload2(\'' + rec.firebase_id + '\',\'' + rec.cast_id + '\',\'' + rec.date + '\')">📎 提出</button>';
+      html += '<div class="proof-card ' + cls + '"><div class="proof-card-avatar">' + esc(initial) + '</div><div class="proof-card-info"><div class="proof-card-name">' + esc(rec.cast) + '</div><div class="proof-card-date">' + formatDate(rec.date) + ' ・ ' + esc(rec.reason || '') + '</div><span class="proof-card-status ' + cls + '">' + status + '</span></div>' + cta + '</div>';
+    }
+  }
+  listEl.innerHTML = html;
+}
+
+let _proofCtx2 = null;
+function triggerProofUpload2(record_id, cast_id, date) {
+  _proofCtx2 = {record_id, cast_id, date};
+  document.getElementById('proof-file-input2').click();
+}
+
+document.addEventListener('change', async (ev) => {
+  if (ev.target.id !== 'proof-file-input2' || !_proofCtx2) return;
+  const file = ev.target.files[0];
+  if (!file) return;
+  if (file.size > 10 * 1024 * 1024) { showToast('ファイルが大きすぎます (最大10MB)'); return; }
+  const ctx = _proofCtx2;
+  _proofCtx2 = null;
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('record_id', ctx.record_id);
+  fd.append('cast_id', ctx.cast_id);
+  fd.append('date', ctx.date);
+  showToast('📤 アップロード中…');
+  try {
+    const r = await fetch(`${XSERVER_BASE}/upload_proof.php?key=${XSERVER_KEY}`, {method:'POST', body: fd});
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.err || 'upload failed');
+    try { db.ref('records/' + ctx.record_id).update({proof_url: j.proof_url, proof_pending: false, proof_uploaded_at: new Date().toISOString()}); } catch(e) {}
+    showToast('✅ アップロード完了');
+    renderProofTab();
+    updateProofTabBadge();
+  } catch (e) {
+    showToast('❌ ' + e.message);
+  }
+  ev.target.value = '';
+});
+
+async function updateProofTabBadge() {
+  const records = await fetchAllProofRecords('');
+  const pending = records.filter(rec => needsProof(rec) && !rec.proof_url);
+  const badge = document.getElementById('proof-tab-badge');
+  if (badge) badge.textContent = pending.length > 0 ? pending.length : '';
+}
+
 const XSERVER_KEY = 'msgroup-attendance-7a3f9c1e';
 const XSERVER_BASE = 'https://cast.linaria-cafe.com/admin';
+
 
 function isProofRequired() {
   if (selectedType !== 'absent') return false;
