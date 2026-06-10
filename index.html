@@ -1118,7 +1118,11 @@ async function renderProofPendingList() {
     const r = await fetch(`${XSERVER_BASE}/attendance_records.php?key=${XSERVER_KEY}&cast=${encodeURIComponent(cast)}`);
     const j = await r.json();
     if (!j.ok) throw new Error(j.err || 'fetch failed');
-    const allProofRecords = (j.records || []).filter(rec => rec.proof_pending || rec.proof_url);
+    // type=absent + reason に体調不良/病気 → 提出対象 (proof_pending フラグに依存しない、過去レコードも対象)
+    const needsProof = (rec) => rec.type === 'absent' && (
+      (rec.reason || '').includes('体調不良') || (rec.reason || '').includes('病気')
+    );
+    const allProofRecords = (j.records || []).filter(rec => needsProof(rec) || rec.proof_url);
     const pending = allProofRecords.filter(rec => !rec.proof_url);
     const uploaded = allProofRecords.filter(rec => rec.proof_url);
     if (allProofRecords.length === 0) {
