@@ -352,13 +352,11 @@ textarea { resize: vertical; min-height: 60px; }
       <label>備考（任意）</label>
       <textarea id="report-note" placeholder="詳細があれば記入"></textarea>
     </div>
-    <div class="form-group" style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:#F3F0FF;border-radius:8px">
-      <input type="checkbox" id="report-post-x" checked style="width:18px;height:18px;cursor:pointer;accent-color:var(--primary)">
-      <label for="report-post-x" style="margin:0;cursor:pointer;font-size:13px;color:var(--text);font-weight:600">店舗の X(Twitter) にも投稿する</label>
-    </div>
-    <div id="proof-hint" class="alert-banner alert-warning" style="display:none;font-size:12px;line-height:1.5;margin:0 0 12px 0">
+    <div id="proof-hint" class="alert-banner alert-warning" style="display:none;font-size:12px;line-height:1.6;margin:0 0 12px 0">
       <strong>📎 病院領収書の提出が必要です</strong><br>
-      当日休み(体調不良)の場合、3日以内に「領収書を提出」ボタンから日付の見える領収書をアップロードしてください
+      ✅ <strong>後日でもOK</strong>(3日以内に提出してください)<br>
+      ⏰ 今すぐ提出も、病院から帰宅後の提出もOK<br>
+      🖼 日付がはっきり見える写真を「📎 領収書を提出する」ボタンから提出
     </div>
     <button class="btn btn-primary" id="submit-btn" onclick="submitReport()">申請を記録する</button>
     <button class="btn btn-secondary" onclick="openProofModal()" style="margin-top:8px;font-size:13px">📎 領収書を提出する</button>
@@ -479,8 +477,8 @@ textarea { resize: vertical; min-height: 60px; }
 <div class="modal-overlay" id="proof-modal">
   <div class="modal">
     <button class="modal-close" onclick="closeProofModal()">&times;</button>
-    <h3>📎 病院領収書を提出</h3>
-    <p style="font-size:12px;color:var(--text-light);margin-bottom:14px">体調不良で当日休みを申請したキャストは、3日以内に日付が見える領収書をアップロードしてください。</p>
+    <h3>📎 病院領収書を提出 <span style="font-size:11px;color:var(--success);font-weight:600;background:#D5F5E3;padding:2px 8px;border-radius:10px;margin-left:6px">後日OK</span></h3>
+    <p style="font-size:13px;color:var(--text);line-height:1.6;margin-bottom:14px"><strong>今申請したばかりでも、帰宅後でも OK</strong><br><span style="font-size:12px;color:var(--text-light)">体調不良で当日休みを申請したキャストは、3日以内に日付が見える領収書をアップロードしてください。<br>📸 病院でもらった領収書を撮影、または保存済みの写真でも OK。</span></p>
     <div class="form-group">
       <label>キャスト名</label>
       <select id="proof-cast-select" onchange="renderProofPendingList()">
@@ -488,7 +486,7 @@ textarea { resize: vertical; min-height: 60px; }
       </select>
     </div>
     <div id="proof-pending-list" style="margin-top:10px"></div>
-    <input type="file" id="proof-file-input" accept="image/jpeg,image/png,image/heic,image/heif,.jpg,.jpeg,.png,.heic,.heif" style="display:none">
+    <input type="file" id="proof-file-input" accept="image/jpeg,image/png,image/heic,image/heif,.jpg,.jpeg,.png,.heic,.heif" capture="environment" style="display:none">
   </div>
 </div>
 
@@ -690,7 +688,6 @@ function fbAddRecord(record) {
       newTime: '',
       reason: record.reason || '',
       note: record.note || '',
-      post_x: record.post_x !== false,  // SPA checkbox の反映 (デフォルト true)
       id: record.id,
       createdAt: record.createdAt
     };
@@ -859,7 +856,6 @@ function submitReport() {
   const minutes = document.getElementById('report-minutes').value;
   const reason = document.getElementById('reason-select').value;
   const note = document.getElementById('report-note').value.trim();
-  const postX = document.getElementById('report-post-x').checked;
 
   if (!castName) { showToast('キャストを選択してください'); return; }
   if (!date) { showToast('日付を入力してください'); return; }
@@ -875,7 +871,6 @@ function submitReport() {
     minutes: minutes ? parseInt(minutes) : null,
     reason: reason,
     note: note,
-    post_x: postX,
     createdAt: new Date().toISOString()
   };
 
@@ -1123,15 +1118,31 @@ async function renderProofPendingList() {
     const r = await fetch(`${XSERVER_BASE}/attendance_records.php?key=${XSERVER_KEY}&cast=${encodeURIComponent(cast)}`);
     const j = await r.json();
     if (!j.ok) throw new Error(j.err || 'fetch failed');
-    const pending = (j.records || []).filter(rec => rec.proof_pending && !rec.proof_url);
-    if (pending.length === 0) {
-      list.innerHTML = '<div class="empty"><p>📎 提出待ちはありません</p></div>';
+    const allProofRecords = (j.records || []).filter(rec => rec.proof_pending || rec.proof_url);
+    const pending = allProofRecords.filter(rec => !rec.proof_url);
+    const uploaded = allProofRecords.filter(rec => rec.proof_url);
+    if (allProofRecords.length === 0) {
+      list.innerHTML = '<div class="empty"><div class="icon">📭</div><p>提出対象の記録はありません</p><p style="font-size:11px;margin-top:8px">体調不良で当日休みを申請した場合のみ表示されます</p></div>';
       return;
     }
-    list.innerHTML = '<h4 style="font-size:13px;margin:12px 0 8px;color:var(--text-light)">提出待ち' + pending.length + '件</h4>' + pending.map(rec => {
-      const daysFlag = rec.days_since_apply > 3 ? '<span style="color:var(--danger);font-weight:700">⚠️ ' + rec.days_since_apply + '日経過</span>' : '<span style="color:var(--text-light);font-size:11px">' + (rec.days_since_apply ?? '?') + '日前</span>';
-      return '<div class="record-item"><div class="record-info"><div class="record-name">' + formatDate(rec.date) + '</div><div class="record-detail">' + esc(rec.reason || '') + ' &nbsp;' + daysFlag + '</div></div><button class="btn btn-primary btn-small" onclick="triggerProofUpload(\'' + rec.firebase_id + '\',\'' + rec.cast_id + '\',\'' + rec.date + '\')">📎 提出</button></div>';
-    }).join('');
+    let html = '';
+    if (pending.length > 0) {
+      html += '<h4 style="font-size:13px;margin:12px 0 8px;color:var(--warning);font-weight:700">⏳ 提出待ち ' + pending.length + '件</h4>';
+      html += pending.map(rec => {
+        const days = rec.days_since_apply ?? 0;
+        const daysFlag = days > 3
+          ? '<span style="color:var(--danger);font-weight:700;font-size:12px">⚠️ ' + days + '日経過 (期限超過)</span>'
+          : days >= 2
+          ? '<span style="color:#D68910;font-weight:600;font-size:12px">' + days + '日前 (残り' + Math.max(0, 3 - days) + '日)</span>'
+          : '<span style="color:var(--text-light);font-size:11px">' + days + '日前 (まだ余裕あり)</span>';
+        return '<div class="record-item"><div class="record-info"><div class="record-name">' + formatDate(rec.date) + ' <span class="badge badge-absent">体調不良</span></div><div class="record-detail">' + esc(rec.reason || '') + '<br>' + daysFlag + '</div></div><button class="btn btn-primary btn-small" onclick="triggerProofUpload(\'' + rec.firebase_id + '\',\'' + rec.cast_id + '\',\'' + rec.date + '\')">📎 提出</button></div>';
+      }).join('');
+    }
+    if (uploaded.length > 0) {
+      html += '<h4 style="font-size:13px;margin:16px 0 8px;color:var(--success);font-weight:700">✅ 提出済 ' + uploaded.length + '件</h4>';
+      html += uploaded.map(rec => '<div class="record-item"><div class="record-info"><div class="record-name">' + formatDate(rec.date) + ' <span class="badge" style="background:#D5F5E3;color:var(--success)">✅ 提出済</span></div><div class="record-detail"><a href="' + rec.proof_url + '" target="_blank" rel="noopener" style="color:var(--info);text-decoration:underline;font-size:12px">📷 提出した領収書を見る</a></div></div></div>').join('');
+    }
+    list.innerHTML = html;
   } catch (e) {
     list.innerHTML = '<div class="empty"><p>❌ ' + esc(e.message) + '</p></div>';
   }
