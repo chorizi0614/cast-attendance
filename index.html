@@ -356,7 +356,12 @@ textarea { resize: vertical; min-height: 60px; }
       <input type="checkbox" id="report-post-x" checked style="width:18px;height:18px;cursor:pointer;accent-color:var(--primary)">
       <label for="report-post-x" style="margin:0;cursor:pointer;font-size:13px;color:var(--text);font-weight:600">店舗の X(Twitter) にも投稿する</label>
     </div>
+    <div id="proof-hint" class="alert-banner alert-warning" style="display:none;font-size:12px;line-height:1.5;margin:0 0 12px 0">
+      <strong>📎 病院領収書の提出が必要です</strong><br>
+      当日休み(体調不良)の場合、3日以内に「領収書を提出」ボタンから日付の見える領収書をアップロードしてください
+    </div>
     <button class="btn btn-primary" id="submit-btn" onclick="submitReport()">申請を記録する</button>
+    <button class="btn btn-secondary" onclick="openProofModal()" style="margin-top:8px;font-size:13px">📎 領収書を提出する</button>
   </div>
 </div>
 
@@ -469,6 +474,23 @@ textarea { resize: vertical; min-height: 60px; }
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
+
+<!-- PROOF UPLOAD MODAL -->
+<div class="modal-overlay" id="proof-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeProofModal()">&times;</button>
+    <h3>📎 病院領収書を提出</h3>
+    <p style="font-size:12px;color:var(--text-light);margin-bottom:14px">体調不良で当日休みを申請したキャストは、3日以内に日付が見える領収書をアップロードしてください。</p>
+    <div class="form-group">
+      <label>キャスト名</label>
+      <select id="proof-cast-select" onchange="renderProofPendingList()">
+        <option value="">選択してください</option>
+      </select>
+    </div>
+    <div id="proof-pending-list" style="margin-top:10px"></div>
+    <input type="file" id="proof-file-input" accept="image/jpeg,image/png,image/heic,image/heif,.jpg,.jpeg,.png,.heic,.heif" style="display:none">
+  </div>
+</div>
 
 <!-- DELETE CONFIRM MODAL -->
 <div class="modal-overlay" id="confirm-modal">
@@ -814,6 +836,7 @@ function selectType(btn) {
   btn.classList.add('active');
   selectedType = btn.dataset.type;
   updateTimeLabel();
+  if (typeof updateProofHint === 'function') updateProofHint();
 }
 function updateTimeLabel() {
   const tg = document.getElementById('time-group');
@@ -1058,6 +1081,101 @@ function deleteRecord(id) {
   };
   document.getElementById('confirm-modal').classList.add('show');
 }
+
+// ============================================================
+//  PROOF UPLOAD (病院領収書)
+// ============================================================
+const XSERVER_KEY = 'msgroup-attendance-7a3f9c1e';
+const XSERVER_BASE = 'https://cast.linaria-cafe.com/admin';
+
+function isProofRequired() {
+  if (selectedType !== 'absent') return false;
+  const reason = document.getElementById('reason-select')?.value || '';
+  if (!reason.includes('体調不良') && !reason.includes('病気')) return false;
+  const dateField = document.getElementById('report-date')?.value || new Date().toISOString().split('T')[0];
+  const today = new Date().toISOString().split('T')[0];
+  return dateField === today;
+}
+
+function updateProofHint() {
+  const hint = document.getElementById('proof-hint');
+  if (hint) hint.style.display = isProofRequired() ? 'block' : 'none';
+}
+
+function openProofModal() {
+  // Populate cast selector
+  const sel = document.getElementById('proof-cast-select');
+  sel.innerHTML = '<option value="">選択してください</option>' + casts.map(c => '<option value="' + esc(c) + '">' + esc(c) + '</option>').join('');
+  document.getElementById('proof-pending-list').innerHTML = '';
+  document.getElementById('proof-modal').classList.add('show');
+}
+
+function closeProofModal() {
+  document.getElementById('proof-modal').classList.remove('show');
+}
+
+async function renderProofPendingList() {
+  const cast = document.getElementById('proof-cast-select').value;
+  const list = document.getElementById('proof-pending-list');
+  if (!cast) { list.innerHTML = ''; return; }
+  list.innerHTML = '<div class="empty"><p>📡 読み込み中…</p></div>';
+  try {
+    const r = await fetch(`${XSERVER_BASE}/attendance_records.php?key=${XSERVER_KEY}&cast=${encodeURIComponent(cast)}`);
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.err || 'fetch failed');
+    const pending = (j.records || []).filter(rec => rec.proof_pending && !rec.proof_url);
+    if (pending.length === 0) {
+      list.innerHTML = '<div class="empty"><p>📎 提出待ちはありません</p></div>';
+      return;
+    }
+    list.innerHTML = '<h4 style="font-size:13px;margin:12px 0 8px;color:var(--text-light)">提出待ち' + pending.length + '件</h4>' + pending.map(rec => {
+      const daysFlag = rec.days_since_apply > 3 ? '<span style="color:var(--danger);font-weight:700">⚠️ ' + rec.days_since_apply + '日経過</span>' : '<span style="color:var(--text-light);font-size:11px">' + (rec.days_since_apply ?? '?') + '日前</span>';
+      return '<div class="record-item"><div class="record-info"><div class="record-name">' + formatDate(rec.date) + '</div><div class="record-detail">' + esc(rec.reason || '') + ' &nbsp;' + daysFlag + '</div></div><button class="btn btn-primary btn-small" onclick="triggerProofUpload(\'' + rec.firebase_id + '\',\'' + rec.cast_id + '\',\'' + rec.date + '\')">📎 提出</button></div>';
+    }).join('');
+  } catch (e) {
+    list.innerHTML = '<div class="empty"><p>❌ ' + esc(e.message) + '</p></div>';
+  }
+}
+
+let _proofCtx = null;
+function triggerProofUpload(record_id, cast_id, date) {
+  _proofCtx = {record_id, cast_id, date};
+  document.getElementById('proof-file-input').click();
+}
+
+document.addEventListener('change', async (ev) => {
+  if (ev.target.id !== 'proof-file-input' || !_proofCtx) return;
+  const file = ev.target.files[0];
+  if (!file) return;
+  if (file.size > 10 * 1024 * 1024) { showToast('ファイルが大きすぎます (最大10MB)'); return; }
+  const ctx = _proofCtx;
+  _proofCtx = null;
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('record_id', ctx.record_id);
+  fd.append('cast_id', ctx.cast_id);
+  fd.append('date', ctx.date);
+  showToast('📤 アップロード中…');
+  try {
+    const r = await fetch(`${XSERVER_BASE}/upload_proof.php?key=${XSERVER_KEY}`, {method:'POST', body: fd});
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.err || 'upload failed');
+    // Also update Firebase record
+    try { db.ref('records/' + ctx.record_id).update({proof_url: j.proof_url, proof_pending: false, proof_uploaded_at: new Date().toISOString()}); } catch(e) {}
+    showToast('✅ アップロード完了');
+    renderProofPendingList();
+  } catch (e) {
+    showToast('❌ ' + e.message);
+  }
+  ev.target.value = '';
+});
+
+// Hook reactive hint update
+['change', 'input'].forEach(evt => {
+  ['reason-select', 'report-date'].forEach(id => {
+    document.addEventListener(evt, (e) => { if (e.target.id === id) updateProofHint(); });
+  });
+});
 
 // ============================================================
 //  SETTINGS
