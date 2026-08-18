@@ -627,6 +627,15 @@ textarea { resize: vertical; min-height: 60px; }
 // ============================================================
 const ADMIN_TABS = ['history', 'cast', 'settings'];
 const NO_DATE_TYPES = ['late'];
+
+// 2026-08-18: 日付は必ず日本時間で出す。
+// toISOString() はUTCなので、JSTの0:00〜9:00に申請すると前日の日付になってしまい、
+// 遅刻が前日に記録される / 欠勤の日付初期値が1日ずれる、という不具合が出ていた。
+function todayJST() {
+  const d = new Date();
+  const p = (x) => String(x).padStart(2, '0');
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+}
 const DEFAULT_PASSWORD = '0000';
 const DEFAULT_CASTS = ['あむ','める','らん','はお','ゆゆ','りり','ぷり','るる','なこ','るい','ゆめ','あっと','うさび','せいら','ひめ','ねむち','しゃる','まりか'];
 
@@ -836,7 +845,7 @@ function fbDeleteRecord(id) {
 //  INIT APP
 // ============================================================
 function initApp() {
-  document.getElementById('report-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('report-date').value = todayJST();
   updateTimeLabel();
   updateLockUI();
 
@@ -972,7 +981,7 @@ function updateTimeLabel() {
 function submitReport() {
   const castName = document.getElementById('cast-select').value;
   const date = NO_DATE_TYPES.includes(selectedType)
-    ? new Date().toISOString().split('T')[0]
+    ? todayJST()
     : document.getElementById('report-date').value;
   const minutes = document.getElementById('report-minutes').value;
   const reason = document.getElementById('reason-select').value;
@@ -1351,8 +1360,8 @@ function isProofRequired() {
   if (selectedType !== 'absent') return false;
   const reason = document.getElementById('reason-select')?.value || '';
   if (!reason.includes('体調不良') && !reason.includes('病気')) return false;
-  const dateField = document.getElementById('report-date')?.value || new Date().toISOString().split('T')[0];
-  const today = new Date().toISOString().split('T')[0];
+  const dateField = document.getElementById('report-date')?.value || todayJST();
+  const today = todayJST();
   return dateField === today;
 }
 
@@ -1493,12 +1502,12 @@ function exportCSV() {
     return [r.date, r.cast, t.label, r.minutes || '', r.reason || '', r.note || '', r.createdAt]
       .map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',');
   });
-  downloadFile('\uFEFF' + header + '\n' + rows.join('\n'), `勤怠記録_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv;charset=utf-8');
+  downloadFile('\uFEFF' + header + '\n' + rows.join('\n'), `勤怠記録_${todayJST()}.csv`, 'text/csv;charset=utf-8');
   showToast('CSVをダウンロードしました');
 }
 function exportJSON() {
   const data = { records, casts, settings, exportedAt: new Date().toISOString() };
-  downloadFile(JSON.stringify(data, null, 2), `勤怠バックアップ_${new Date().toISOString().split('T')[0]}.json`, 'application/json');
+  downloadFile(JSON.stringify(data, null, 2), `勤怠バックアップ_${todayJST()}.json`, 'application/json');
   showToast('バックアップを保存しました');
 }
 function importJSON(event) {
