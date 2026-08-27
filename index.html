@@ -802,6 +802,26 @@ function fbSaveSettings() {
 function fbSavePassword(pw) {
   db.ref('adminPassword').set(pw);
 }
+// 2026-08-27: Xserver への同期が失敗しても console にしか出ておらず、
+// キャストには必ず「記録しました！」と表示されていた。アプリにだけ記録が残り、
+// シフト表も給料の支障率も更新されない「片肺」に誰も気づけないため、その場で本人に知らせる。
+function syncFailed(msg) {
+  console.warn('[Xserver] sync failed:', msg);
+  try { showToast('お店側に届きませんでした'); } catch (e) {}
+  let el = document.getElementById('sync-error');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'sync-error';
+    el.style.cssText = 'position:fixed;left:8px;right:8px;bottom:8px;z-index:9999;background:#E17055;color:#fff;padding:14px 16px;border-radius:12px;font-size:13px;line-height:1.7;box-shadow:0 6px 20px rgba(0,0,0,.25)';
+    document.body.appendChild(el);
+  }
+  el.innerHTML = '⚠️ <b>お店のシフト表に反映できませんでした</b><br>'
+    + 'アプリには記録されましたが、お店側には届いていません。<br>'
+    + 'お手数ですが、店長にご連絡ください。'
+    + '<div style="opacity:.85;font-size:11px;margin-top:6px">' + esc(String(msg)) + '</div>'
+    + '<button onclick="this.parentNode.remove()" style="margin-top:8px;background:#fff;color:#E17055;border:0;border-radius:8px;padding:6px 14px;font-weight:700">閉じる</button>';
+}
+
 function fbAddRecord(record) {
   const ref = db.ref('records').push();
   record.id = ref.key;
@@ -828,11 +848,11 @@ function fbAddRecord(record) {
     .then(r => r.json())
     .then(j => {
       if (j.ok) console.log('[Xserver] shifts updated:', j.action);
-      else console.warn('[Xserver] sync failed:', j.err);
+      else syncFailed(j.err || '不明なエラー');
     })
-    .catch(e => console.warn('[Xserver] network error:', e));
+    .catch(e => syncFailed('通信エラー: ' + e));
   } catch (e) {
-    console.warn('[Xserver] try-catch:', e);
+    syncFailed('送信できませんでした: ' + e);
   }
 
   return record;
