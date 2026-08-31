@@ -230,6 +230,11 @@ textarea { resize: vertical; min-height: 60px; }
 .pw-box input:focus { outline: none; border-color: var(--primary); }
 .pw-error { color: var(--danger); font-size: 12px; margin-bottom: 8px; display: none; }
 .lock-icon { font-size: 10px; margin-left: 2px; }
+/* 2026-08-31: キャストに見せるのは 申請 / 領収書 の2つだけ。管理タブは解錠時のみ */
+.tab.admin-only { display: none; }
+body.admin-on .tab.admin-only { display: block; }
+.tab-unlock { margin-left: auto; opacity: .3; font-size: 12px; flex: 0 0 auto; }
+body.admin-on .tab-unlock { display: none; }
 .lock-btn {
   position: fixed; bottom: 20px; right: 20px; width: 48px; height: 48px;
   border-radius: 50%; background: var(--primary); color: #fff; border: none;
@@ -397,10 +402,11 @@ textarea { resize: vertical; min-height: 60px; }
 <div class="tabs">
   <button class="tab active" onclick="switchTab('report')">申請</button>
   <button class="tab" onclick="switchTab('proof')">📎 領収書<span class="tab-badge" id="proof-tab-badge"></span></button>
-  <button class="tab" onclick="switchTab('dashboard')">ダッシュボード</button>
-  <button class="tab" onclick="switchTab('history')">履歴<span class="lock-icon">🔒</span></button>
-  <button class="tab" onclick="switchTab('cast')">キャスト<span class="lock-icon">🔒</span></button>
-  <button class="tab" onclick="switchTab('settings')">設定<span class="lock-icon">🔒</span></button>
+  <button class="tab admin-only" onclick="switchTab('dashboard')">ダッシュボード</button>
+  <button class="tab admin-only" onclick="switchTab('history')">履歴</button>
+  <button class="tab admin-only" onclick="switchTab('cast')">キャスト</button>
+  <button class="tab admin-only" onclick="switchTab('settings')">設定</button>
+  <button class="tab tab-unlock" onclick="switchTab('dashboard')" title="管理者用">🔒</button>
 </div>
 
 <!-- 申請ページ -->
@@ -471,7 +477,7 @@ textarea { resize: vertical; min-height: 60px; }
 
   <div class="form-group" style="margin-bottom:8px">
     <select id="proof-tab-cast" onchange="renderProofTab()">
-      <option value="">👥 全員を表示 (管理者向け)</option>
+      <option value="">▼ 自分の名前を選んでください</option>
     </select>
   </div>
 
@@ -625,7 +631,7 @@ textarea { resize: vertical; min-height: 60px; }
 // ============================================================
 //  CONFIG & FIREBASE
 // ============================================================
-const ADMIN_TABS = ['history', 'cast', 'settings'];
+const ADMIN_TABS = ['dashboard', 'history', 'cast', 'settings'];
 const NO_DATE_TYPES = ['late'];
 
 // 2026-08-18: 日付は必ず日本時間で出す。
@@ -942,6 +948,8 @@ function lockAdmin() {
 function updateLockUI() {
   document.querySelectorAll('.lock-icon').forEach(el => { el.style.display = adminUnlocked ? 'none' : ''; });
   document.getElementById('lock-btn').style.display = adminUnlocked ? 'block' : 'none';
+  document.body.classList.toggle('admin-on', adminUnlocked);
+  try { refreshProofCastSelect(); } catch (e) {}
 }
 function changePassword() {
   const current = document.getElementById('pw-current').value;
@@ -1277,14 +1285,26 @@ function refreshProofCastSelect() {
   const sel = document.getElementById('proof-tab-cast');
   if (!sel) return;
   const cur = sel.value;
-  sel.innerHTML = '<option value="">👥 全員を表示 (管理者向け)</option>' + casts.map(c => '<option value="' + esc(c) + '">' + esc(c) + '</option>').join('');
+  sel.innerHTML = '<option value="">▼ 自分の名前を選んでください</option>'
+    + (adminUnlocked ? '<option value="__ALL__">👥 全員を表示 (管理者向け)</option>' : '')
+    + casts.map(c => '<option value="' + esc(c) + '">' + esc(c) + '</option>').join('');
   sel.value = cur;
 }
 
 async function renderProofTab() {
-  const castFilter = document.getElementById('proof-tab-cast').value;
+  let castFilter = document.getElementById('proof-tab-cast').value;
   const listEl = document.getElementById('proof-tab-list');
   const summaryEl = document.getElementById('proof-summary-area');
+  if (castFilter === '__ALL__') {
+    if (!adminUnlocked) { document.getElementById('proof-tab-cast').value = ''; }
+    castFilter = '';
+  }
+  if (!castFilter && !adminUnlocked) {
+    summaryEl.innerHTML = '';
+    listEl.innerHTML = '<div class="proof-empty"><div class="icon">👆</div><p>上のリストから<b>自分の名前</b>を選んでください</p><p class="sub">他の人の提出状況は表示されません</p></div>';
+    const b0 = document.getElementById('proof-tab-badge'); if (b0) b0.textContent = '';
+    return;
+  }
   listEl.innerHTML = '<div class="proof-empty"><div class="icon">📡</div><p>読み込み中…</p></div>';
   
   const records = await fetchAllProofRecords(castFilter);
@@ -1366,7 +1386,10 @@ document.addEventListener('change', async (ev) => {
 });
 
 async function updateProofTabBadge() {
-  const records = await fetchAllProofRecords('');
+  const sel0 = document.getElementById('proof-tab-cast');
+  const who = sel0 && sel0.value && sel0.value !== '__ALL__' ? sel0.value : '';
+  if (!who && !adminUnlocked) { const b1 = document.getElementById('proof-tab-badge'); if (b1) b1.textContent = ''; return; }
+  const records = await fetchAllProofRecords(who);
   const pending = records.filter(rec => needsProof(rec) && !rec.proof_url);
   const badge = document.getElementById('proof-tab-badge');
   if (badge) badge.textContent = pending.length > 0 ? pending.length : '';
