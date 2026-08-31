@@ -426,6 +426,14 @@ body.admin-on .tab-unlock { display: none; }
           <span class="icon">🔄</span>勤務変更
         </button>
       </div>
+      <div id="change-kind-group" style="display:none;margin-top:10px;padding:10px;background:#f5f3ff;border:1.5px solid #c4b5fd;border-radius:10px">
+        <div style="font-size:13px;font-weight:700;color:#5b21b6;margin-bottom:6px">どちらですか？</div>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px"><input type="radio" name="change-kind" value="cancel" checked style="width:auto"> この日は入れない</label>
+        <label style="display:flex;align-items:center;gap:6px;margin-top:5px;cursor:pointer;font-size:14px"><input type="radio" name="change-kind" value="time" style="width:auto"> 時間を変えたい（出勤はする）</label>
+        <div style="font-size:11px;color:#7c3aed;margin-top:7px;line-height:1.6">
+          「入れない」は<b>シフトの5日前まで</b>ならノーカウントです。<br>5日を切ると欠勤として数えます。時間の変更はいつでもノーカウントです。
+        </div>
+      </div>
     </div>
     <div class="form-group">
       <label>キャスト名</label>
@@ -839,6 +847,7 @@ function fbAddRecord(record) {
       cast: record.cast,
       date: record.date,
       type: record.type,
+      changeKind: record.changeKind || '',
       lateMinutes: record.minutes || 0,
       newTime: '',
       reason: record.reason || '',
@@ -998,6 +1007,8 @@ function updateTimeLabel() {
   const tl = document.getElementById('time-label');
   const dg = document.getElementById('date-group');
   dg.style.display = NO_DATE_TYPES.includes(selectedType) ? 'none' : '';
+  const ck = document.getElementById('change-kind-group');
+  if (ck) ck.style.display = (selectedType === 'change') ? '' : 'none';
   if (selectedType === 'late') { tg.style.display = ''; tl.textContent = '遅刻時間（分）'; }
   else if (selectedType === 'change') { tg.style.display = ''; tl.textContent = '変更時間（分・任意）'; }
   else { tg.style.display = 'none'; }
@@ -1022,8 +1033,10 @@ function submitReport() {
   btn.disabled = true;
   btn.textContent = '送信中...';
 
+  const _ck = document.querySelector('input[name="change-kind"]:checked');
   const record = {
     type: selectedType,
+    changeKind: (selectedType === 'change') ? ((_ck && _ck.value) || 'cancel') : '',
     cast: castName,
     date: date,
     minutes: minutes ? parseInt(minutes) : null,
